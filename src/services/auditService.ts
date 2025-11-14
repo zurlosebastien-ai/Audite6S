@@ -1,9 +1,14 @@
-import { supabase } from '../lib/supabase'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { MonthlyAudit, LocationAudit, PillarEvaluation, CorrectiveAction, GroupScore } from '../types'
 
 export class AuditService {
   // Get all monthly audits with their related data
   static async getAllAudits(): Promise<MonthlyAudit[]> {
+    if (!isSupabaseConfigured || !supabase) {
+      console.warn('Supabase not configured, returning empty audits')
+      return []
+    }
+
     try {
       // Get monthly audits
       const { data: monthlyAudits, error: monthlyError } = await supabase
@@ -121,6 +126,11 @@ export class AuditService {
 
   // Save a monthly audit to the database
   static async saveMonthlyAudit(audit: MonthlyAudit): Promise<void> {
+    if (!isSupabaseConfigured || !supabase) {
+      console.warn('Supabase not configured, skipping save')
+      return
+    }
+
     try {
       // First, upsert the monthly audit
       const { data: monthlyAuditData, error: monthlyError } = await supabase
@@ -223,6 +233,11 @@ export class AuditService {
 
   // Initialize database with default data if empty
   static async initializeDatabase(): Promise<void> {
+    if (!isSupabaseConfigured || !supabase) {
+      console.warn('Supabase not configured, skipping database initialization')
+      return
+    }
+
     try {
       // Check if location groups exist
       const { data: existingGroups } = await supabase
@@ -336,6 +351,16 @@ export class AuditService {
 
   // Load configuration data (groups, locations, pillars, questions)
   static async loadConfiguration() {
+    if (!isSupabaseConfigured || !supabase) {
+      console.warn('Supabase not configured, returning empty configuration')
+      return {
+        groups: [],
+        locations: [],
+        pillars: [],
+        questions: []
+      }
+    }
+
     try {
       // Load location groups
       const { data: groups, error: groupsError } = await supabase
