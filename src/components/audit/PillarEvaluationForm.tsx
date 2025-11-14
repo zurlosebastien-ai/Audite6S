@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Pillar, PillarEvaluation, CorrectiveAction } from '../../types';
-import { Star, CheckCircle, XCircle, Plus, Check, LightbulbIcon } from 'lucide-react';
+import { Star, CheckCircle, XCircle, Plus, Check, Lightbulb as LightbulbIcon } from 'lucide-react';
 
 interface PillarEvaluationFormProps {
   pillar: Pillar;
