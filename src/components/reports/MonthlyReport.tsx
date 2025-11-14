@@ -1,13 +1,27 @@
 import React, { useRef, useEffect } from 'react';
 import { Download } from 'lucide-react';
 import { useAudit } from '../../context/AuditContext';
-import { LOCATIONS, PILLARS, LOCATION_GROUPS } from '../../data/constants';
 import Chart from 'chart.js/auto';
 
 const MonthlyReport: React.FC = () => {
-  const { currentMonthAudit, exportToExcel } = useAudit();
+  const { currentMonthAudit, exportToExcel, isLoading, locations, pillars, locationGroups } = useAudit();
   const barChartRef = useRef<HTMLCanvasElement>(null);
   const radarChartRef = useRef<HTMLCanvasElement>(null);
+  
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-6"></div>
+          <div className="h-64 bg-gray-200 rounded mb-6"></div>
+          <div className="space-y-3">
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   const formatMonth = (monthStr: string) => {
     const [year, month] = monthStr.split('-');
@@ -23,14 +37,14 @@ const MonthlyReport: React.FC = () => {
   };
   
   const createLocationChartData = (groupId: string) => {
-    const groupLocations = LOCATIONS.filter(loc => loc.groupId === groupId);
+    const groupLocations = locations.filter(loc => loc.groupId === groupId);
     const completedAudits = currentMonthAudit.locationAudits.filter(
       audit => audit.completed && groupLocations.some(loc => loc.id === audit.locationId)
     );
     
     return {
       labels: completedAudits.map(audit => {
-        const location = LOCATIONS.find(loc => loc.id === audit.locationId);
+        const location = locations.find(loc => loc.id === audit.locationId);
         return location ? location.name : audit.locationId;
       }),
       datasets: [{
@@ -44,10 +58,10 @@ const MonthlyReport: React.FC = () => {
   };
   
   const createPillarRadarData = (groupId: string) => {
-    const groupLocations = LOCATIONS.filter(loc => loc.groupId === groupId);
+    const groupLocations = locations.filter(loc => loc.groupId === groupId);
     
     // Exclude 'people' pillar from radar chart as it's not scored
-    const scoredPillars = PILLARS.filter(pillar => pillar.id !== 'people');
+    const scoredPillars = pillars.filter(pillar => pillar.id !== 'people');
     
     const pillarAverages = scoredPillars.map(pillar => {
       const scores = currentMonthAudit.locationAudits
@@ -92,8 +106,8 @@ const MonthlyReport: React.FC = () => {
   
   return (
     <div className="space-y-8">
-      {LOCATION_GROUPS.map(group => {
-        const groupLocations = LOCATIONS.filter(loc => loc.groupId === group.id);
+      {locationGroups.map(group => {
+        const groupLocations = locations.filter(loc => loc.groupId === group.id);
         const completedAudits = currentMonthAudit.locationAudits.filter(
           audit => audit.completed && groupLocations.some(loc => loc.id === audit.locationId)
         );
@@ -134,7 +148,7 @@ const MonthlyReport: React.FC = () => {
             <h3 className="font-medium text-gray-700 mb-4">Détails par local :</h3>
             <div className="space-y-4">
               {completedAudits.map(audit => {
-                const location = LOCATIONS.find(loc => loc.id === audit.locationId);
+                const location = locations.find(loc => loc.id === audit.locationId);
                 if (!location) return null;
                 
                 return (
@@ -148,7 +162,7 @@ const MonthlyReport: React.FC = () => {
                     <div className="p-3">
                       <h5 className="text-sm font-medium text-gray-600 mb-2">Évaluations par pilier :</h5>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {PILLARS.map(pillar => {
+                        {pillars.map(pillar => {
                           const evaluation = audit.evaluations.find(e => e.pillarId === pillar.id);
                           if (!evaluation) return null;
                           

@@ -2,15 +2,31 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Circle, AlertCircle } from 'lucide-react';
 import { useAudit } from '../../context/AuditContext';
-import { LOCATIONS, LOCATION_GROUPS } from '../../data/constants';
 
 const AuditStatus: React.FC = () => {
-  const { currentMonthAudit, getPendingLocations } = useAudit();
+  const { currentMonthAudit, getPendingLocations, isLoading, locations, locationGroups } = useAudit();
   const navigate = useNavigate();
   
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+          <div className="h-2 bg-gray-200 rounded w-full mb-6"></div>
+          <div className="space-y-3">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   const pendingLocationIds = getPendingLocations();
-  const completedCount = LOCATIONS.length - pendingLocationIds.length;
-  const progress = (completedCount / LOCATIONS.length) * 100;
+  const completedCount = locations.length - pendingLocationIds.length;
+  const progress = (completedCount / locations.length) * 100;
 
   const getMonthName = (monthStr: string) => {
     const [year, month] = monthStr.split('-');
@@ -37,7 +53,7 @@ const AuditStatus: React.FC = () => {
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium text-gray-700">
-            {completedCount} sur {LOCATIONS.length} locaux audités
+            {completedCount} sur {locations.length} locaux audités
           </span>
           <span className="text-sm font-medium text-gray-700">
             {progress.toFixed(0)}%
@@ -56,9 +72,9 @@ const AuditStatus: React.FC = () => {
         <div className="mb-6">
           <h3 className="font-medium text-gray-700 mb-3">Scores par groupe :</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {LOCATION_GROUPS.map(group => {
+            {locationGroups.map(group => {
               const groupScore = getGroupScore(group.id);
-              const groupLocations = LOCATIONS.filter(loc => loc.groupId === group.id);
+              const groupLocations = locations.filter(loc => loc.groupId === group.id);
               const completedGroupAudits = currentMonthAudit.locationAudits.filter(
                 audit => audit.completed && groupLocations.some(loc => loc.id === audit.locationId)
               );
@@ -85,8 +101,8 @@ const AuditStatus: React.FC = () => {
 
       {/* Location status list grouped by group */}
       <h3 className="font-medium text-gray-700 mb-3">État des locaux :</h3>
-      {LOCATION_GROUPS.map(group => {
-        const groupLocations = LOCATIONS.filter(loc => loc.groupId === group.id);
+      {locationGroups.map(group => {
+        const groupLocations = locations.filter(loc => loc.groupId === group.id);
         
         return (
           <div key={group.id} className="mb-6">

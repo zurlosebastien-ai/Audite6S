@@ -1,13 +1,28 @@
 import React from 'react';
 import { BarChart2, Download } from 'lucide-react';
 import { useAudit } from '../../context/AuditContext';
-import { LOCATIONS, PILLARS } from '../../data/constants';
 
 const AuditSummary: React.FC = () => {
-  const { currentMonthAudit, exportToExcel } = useAudit();
+  const { currentMonthAudit, exportToExcel, isLoading, locations, pillars } = useAudit();
+  
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-6"></div>
+          <div className="space-y-3">
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
+            <div className="h-2 bg-gray-200 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-2 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   // Calculate average scores per pillar
-  const pillarAverages = PILLARS.map(pillar => {
+  const pillarAverages = pillars.map(pillar => {
     // Skip 'people' pillar for scoring display
     if (pillar.id === 'people') {
       return null;
@@ -85,7 +100,7 @@ const AuditSummary: React.FC = () => {
       <div className="mt-8">
         <h3 className="font-medium text-gray-700 mb-3">Scores par local :</h3>
         <div className="grid grid-cols-2 gap-3">
-          {LOCATIONS.map(location => {
+          {locations.map(location => {
             const locationAudit = currentMonthAudit.locationAudits.find(
               audit => audit.locationId === location.id && audit.completed
             );

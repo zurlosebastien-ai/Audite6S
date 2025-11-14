@@ -1,11 +1,25 @@
 import React, { useRef, useEffect } from 'react';
 import { useAudit } from '../../context/AuditContext';
-import { LOCATIONS, PILLARS } from '../../data/constants';
 import Chart from 'chart.js/auto';
 
 const HistoricalReport: React.FC = () => {
-  const { auditHistory } = useAudit();
+  const { auditHistory, isLoading, locations, pillars } = useAudit();
   const trendChartRef = useRef<HTMLCanvasElement>(null);
+  
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-6"></div>
+          <div className="h-80 bg-gray-200 rounded mb-8"></div>
+          <div className="space-y-3">
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   const formatMonth = (monthStr: string) => {
     const [year, month] = monthStr.split('-');
@@ -19,7 +33,7 @@ const HistoricalReport: React.FC = () => {
     .slice(-6);
   
   const createTrendChartData = () => {
-    const datasets = LOCATIONS.map((location, index) => {
+    const datasets = locations.map((location, index) => {
       const colors = [
         'rgba(59, 130, 246, 0.7)',
         'rgba(16, 185, 129, 0.7)',
@@ -139,7 +153,7 @@ const HistoricalReport: React.FC = () => {
             <tr className="bg-gray-100 border-b border-gray-200">
               <th className="p-3 text-left font-medium text-gray-700">Année</th>
               <th className="p-3 text-left font-medium text-gray-700">Mois</th>
-              {LOCATIONS.map(location => (
+              {locations.map(location => (
                 <th key={location.id} className="p-3 text-left font-medium text-gray-700">
                   {location.name}
                 </th>
@@ -153,7 +167,7 @@ const HistoricalReport: React.FC = () => {
                 <td className="p-3">{monthAudit.year}</td>
                 <td className="p-3">{formatMonth(monthAudit.month)}</td>
                 
-                {LOCATIONS.map(location => {
+                {locations.map(location => {
                   const locationAudit = monthAudit.locationAudits.find(
                     audit => audit.locationId === location.id && audit.completed
                   );

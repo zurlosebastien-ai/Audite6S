@@ -1,10 +1,17 @@
 import React from 'react';
 import { useAudit } from '../context/AuditContext';
-import { LOCATIONS, PILLARS } from '../data/constants';
 import { Check, AlertCircle, Clock, AlertTriangle } from 'lucide-react';
 
 const CorrectiveActionsPage: React.FC = () => {
-  const { currentMonthAudit, completeCorrectiveAction } = useAudit();
+  const { currentMonthAudit, completeCorrectiveAction, isLoading, locations, pillars } = useAudit();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   // Calculate days since creation and deadline status
   const getDeadlineStatus = (createdAt: string) => {
@@ -24,9 +31,9 @@ const CorrectiveActionsPage: React.FC = () => {
 
   // Get all corrective actions from all location audits
   const allActions = currentMonthAudit?.locationAudits?.flatMap(audit => {
-    const location = LOCATIONS.find(loc => loc.id === audit.locationId);
+    const location = locations.find(loc => loc.id === audit.locationId);
     return audit.evaluations?.flatMap(evaluation => {
-      const pillar = PILLARS.find(p => p.id === evaluation.pillarId);
+      const pillar = pillars.find(p => p.id === evaluation.pillarId);
       return evaluation.correctiveActions?.map(action => ({
         ...action,
         locationName: location?.name || 'Unknown',

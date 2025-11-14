@@ -1,12 +1,19 @@
 import React from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import LocationAuditForm from '../components/audit/LocationAuditForm';
-import { LOCATIONS } from '../data/constants';
 import { useAudit } from '../context/AuditContext';
 
 const AuditPage: React.FC = () => {
   const { locationId } = useParams<{ locationId?: string }>();
-  const { getPendingLocations } = useAudit();
+  const { getPendingLocations, isLoading, locations } = useAudit();
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
   
   // If no location ID is provided, show list of pending locations
   if (!locationId) {
@@ -32,7 +39,7 @@ const AuditPage: React.FC = () => {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {pendingLocations.map(id => {
-                const location = LOCATIONS.find(loc => loc.id === id);
+                const location = locations.find(loc => loc.id === id);
                 if (!location) return null;
                 
                 return (
@@ -54,7 +61,7 @@ const AuditPage: React.FC = () => {
   }
   
   // Check if the provided location ID is valid
-  const isValidLocation = LOCATIONS.some(loc => loc.id === locationId);
+  const isValidLocation = locations.some(loc => loc.id === locationId);
   if (!isValidLocation) {
     return <Navigate to="/audit" replace />;
   }

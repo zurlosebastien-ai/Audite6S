@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Save, CheckCircle } from 'lucide-react';
 import { useAudit } from '../../context/AuditContext';
-import { PILLARS, LOCATIONS } from '../../data/constants';
 import { PillarEvaluation } from '../../types';
 import PillarEvaluationForm from './PillarEvaluationForm';
 
@@ -15,12 +14,23 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
     startLocationAudit, 
     getLocationAudit, 
     updateEvaluation, 
-    completeLocationAudit 
+    completeLocationAudit,
+    isLoading,
+    locations,
+    pillars
   } = useAudit();
   const navigate = useNavigate();
   const [currentPillarIndex, setCurrentPillarIndex] = useState(0);
   
-  const location = LOCATIONS.find(loc => loc.id === locationId);
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+  
+  const location = locations.find(loc => loc.id === locationId);
   if (!location) {
     return <div>Location introuvable</div>;
   }
@@ -31,7 +41,7 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
     startLocationAudit(locationId);
   }
   
-  const currentPillar = PILLARS[currentPillarIndex];
+  const currentPillar = pillars[currentPillarIndex];
   const initialEvaluation = locationAudit?.evaluations.find(
     evaluationItem => evaluationItem.pillarId === currentPillar.id
   );
@@ -40,7 +50,7 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
     updateEvaluation(locationId, evaluation);
     
     // Move to next pillar if not the last one
-    if (currentPillarIndex < PILLARS.length - 1) {
+    if (currentPillarIndex < pillars.length - 1) {
       setCurrentPillarIndex(currentPillarIndex + 1);
     }
   };
@@ -52,7 +62,7 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
   };
   
   const handleNextPillar = () => {
-    if (currentPillarIndex < PILLARS.length - 1) {
+    if (currentPillarIndex < pillars.length - 1) {
       setCurrentPillarIndex(currentPillarIndex + 1);
     }
   };
@@ -63,7 +73,7 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
   };
   
   // Check if all pillars have been evaluated (including people pillar)
-  const canComplete = locationAudit?.evaluations.length === PILLARS.length;
+  const canComplete = locationAudit?.evaluations.length === pillars.length;
   
   return (
     <div>
@@ -83,7 +93,7 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
       {/* Pillar navigation */}
       <div className="flex justify-center mb-6">
         <div className="flex items-center space-x-2 bg-gray-100 px-4 py-2 rounded-full">
-          {PILLARS.map((pillar, index) => {
+          {pillars.map((pillar, index) => {
             const isActive = index === currentPillarIndex;
             const isCompleted = locationAudit?.evaluations.some(
               evaluationItem => evaluationItem.pillarId === pillar.id
@@ -131,11 +141,11 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
         <button
           onClick={handleNextPillar}
           className={`flex items-center px-4 py-2 rounded-md transition-colors
-            ${currentPillarIndex < PILLARS.length - 1 
+            ${currentPillarIndex < pillars.length - 1 
               ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' 
               : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`
           }
-          disabled={currentPillarIndex === PILLARS.length - 1}
+          disabled={currentPillarIndex === pillars.length - 1}
         >
           Suivant
           <ChevronRight size={18} className="ml-1" />

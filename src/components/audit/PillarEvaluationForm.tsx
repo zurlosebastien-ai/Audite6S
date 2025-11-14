@@ -4,14 +4,12 @@ import { Star, CheckCircle, XCircle, Plus, Check, LightbulbIcon } from 'lucide-r
 
 interface PillarEvaluationFormProps {
   pillar: Pillar;
-  locationId: string;
   initialEvaluation?: PillarEvaluation;
   onSave: (evaluation: PillarEvaluation) => void;
 }
 
 const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
   pillar,
-  locationId,
   initialEvaluation,
   onSave,
 }) => {
@@ -108,7 +106,7 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
     const action: CorrectiveAction = {
       id: crypto.randomUUID(),
       description: newAction.trim(),
-      locationId,
+      locationId: '', // Will be set by the parent component
       pillarId: pillar.id,
       createdAt: new Date().toISOString(),
       status: 'pending'

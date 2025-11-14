@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { AuditHistory, LocationAudit, MonthlyAudit, PillarEvaluation, CorrectiveAction } from '../types';
+import { AuditService } from '../services/auditService';
+
+// We'll still import constants as fallback, but load from database
 import { LOCATIONS, PILLARS, LOCATION_GROUPS } from '../data/constants';
 
 interface AuditContextType {
@@ -14,6 +17,10 @@ interface AuditContextType {
   calculateOverallScore: (locationId: string) => number;
   resetAllAudits: () => void;
   completeCorrectiveAction: (actionId: string, locationId: string, pillarId: string) => void;
+  isLoading: boolean;
+  locations: typeof LOCATIONS;
+  pillars: typeof PILLARS;
+  locationGroups: typeof LOCATION_GROUPS;
 }
 
 const AuditContext = createContext<AuditContextType | undefined>(undefined);
@@ -38,42 +45,94 @@ const createNewMonthlyAudit = (): MonthlyAudit => {
   };
 };
 
-const calculateGroupScores = (locationAudits: LocationAudit[]): { groupId: string; score: number }[] => {
-  return LOCATION_GROUPS.map(group => {
-    const groupLocations = LOCATIONS.filter(loc => loc.groupId === group.id);
-    const completedGroupAudits = locationAudits.filter(audit => 
-      audit.completed && groupLocations.some(loc => loc.id === audit.locationId)
-    );
-    
-    if (completedGroupAudits.length === 0) {
-      return { groupId: group.id, score: 0 };
-    }
-    
-    const totalScore = completedGroupAudits.reduce((sum, audit) => sum + (audit.overallScore || 0), 0);
-    return { groupId: group.id, score: totalScore / completedGroupAudits.length };
-  });
-};
-
 export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [locations, setLocations] = useState(LOCATIONS);
+  const [pillars, setPillars] = useState(PILLARS);
+  const [locationGroups, setLocationGroups] = useState(LOCATION_GROUPS);
+  
   const [auditHistory, setAuditHistory] = useState<AuditHistory>(() => {
-    const savedHistory = localStorage.getItem('auditHistory');
-    return savedHistory ? JSON.parse(savedHistory) : { audits: [] };
+    return { audits: [] };
   });
 
   const [currentMonthAudit, setCurrentMonthAudit] = useState<MonthlyAudit>(() => {
-    const currentMonth = getCurrentMonth();
-    const existingAudit = auditHistory.audits.find(audit => audit.month === currentMonth);
-    
-    if (existingAudit) {
-      return existingAudit;
-    }
-    
     return createNewMonthlyAudit();
   });
 
+  // Initialize data from Supabase on component mount
   useEffect(() => {
-    localStorage.setItem('auditHistory', JSON.stringify(auditHistory));
-  }, [auditHistory]);
+    const initializeData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Initialize database with default data if needed
+        await AuditService.initializeDatabase();
+        
+        // Load configuration data
+        const config = await AuditService.loadConfiguration();
+        
+        // Transform database data to match our types
+        if (config.groups.length > 0) {
+          setLocationGroups(config.groups.map(g => ({ id: g.id, name: g.name })));
+        }
+        
+        if (config.locations.length > 0) {
+          setLocations(config.locations.map(l => ({ 
+            id: l.id, 
+            name: l.name, 
+            groupId: l.group_id 
+          })));
+        }
+        
+        if (config.pillars.length > 0 && config.questions.length > 0) {
+          const pillarsWithQuestions = config.pillars.map(pillar => {
+            const pillarQuestions = config.questions
+              .filter(q => q.pillar_id === pillar.id)
+              .map(q => ({ id: q.id, text: q.text }));
+            
+            return {
+              id: pillar.id as any,
+              name: pillar.name,
+              description: pillar.description,
+              questions: pillarQuestions
+            };
+          });
+          setPillars(pillarsWithQuestions);
+        }
+        
+        // Load audit history from database
+        const audits = await AuditService.getAllAudits();
+        setAuditHistory({ audits });
+        
+        // Set current month audit
+        const currentMonth = getCurrentMonth();
+        const existingAudit = audits.find(audit => audit.month === currentMonth);
+        
+        if (existingAudit) {
+          setCurrentMonthAudit(existingAudit);
+        } else {
+          setCurrentMonthAudit(createNewMonthlyAudit());
+        }
+        
+      } catch (error) {
+        console.error('Error initializing data:', error);
+        // Keep using local constants as fallback
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    initializeData();
+  }, []);
+
+  // Save to database whenever audit data changes
+  useEffect(() => {
+    if (!isLoading && currentMonthAudit.locationAudits.length > 0) {
+      AuditService.saveMonthlyAudit(currentMonthAudit).catch(error => {
+        console.error('Error saving audit:', error);
+      });
+    }
+  }, [currentMonthAudit, isLoading]);
 
   useEffect(() => {
     const currentMonth = getCurrentMonth();
@@ -90,11 +149,26 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [currentMonthAudit.month]);
 
+  const calculateGroupScores = (locationAudits: LocationAudit[]): { groupId: string; score: number }[] => {
+    return locationGroups.map(group => {
+      const groupLocations = locations.filter(loc => loc.groupId === group.id);
+      const completedGroupAudits = locationAudits.filter(audit => 
+        audit.completed && groupLocations.some(loc => loc.id === audit.locationId)
+      );
+      
+      if (completedGroupAudits.length === 0) {
+        return { groupId: group.id, score: 0 };
+      }
+      
+      const totalScore = completedGroupAudits.reduce((sum, audit) => sum + (audit.overallScore || 0), 0);
+      return { groupId: group.id, score: totalScore / completedGroupAudits.length };
+    });
+  };
+
   const resetAllAudits = () => {
     const newMonthlyAudit = createNewMonthlyAudit();
     setCurrentMonthAudit(newMonthlyAudit);
     setAuditHistory({ audits: [] });
-    localStorage.removeItem('auditHistory');
   };
 
   const startLocationAudit = (locationId: string) => {
@@ -110,7 +184,7 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
 
-    const location = LOCATIONS.find(loc => loc.id === locationId);
+    const location = locations.find(loc => loc.id === locationId);
     const newLocationAudit: LocationAudit = {
       locationId,
       date: new Date().toISOString(),
@@ -210,7 +284,7 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const updatedLocationAudits = [...currentMonthAudit.locationAudits];
     updatedLocationAudits[locationAuditIndex] = updatedLocationAudit;
 
-    const allLocationsAudited = LOCATIONS.every(location => 
+    const allLocationsAudited = locations.every(location => 
       updatedLocationAudits.some(
         audit => audit.locationId === location.id && audit.completed
       )
@@ -220,7 +294,7 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (allLocationsAudited) {
       monthlyOverallScore = updatedLocationAudits
         .filter(audit => audit.completed && audit.overallScore !== undefined)
-        .reduce((sum, audit) => sum + (audit.overallScore || 0), 0) / LOCATIONS.length;
+        .reduce((sum, audit) => sum + (audit.overallScore || 0), 0) / locations.length;
     }
 
     const updatedMonthlyAudit = {
@@ -255,7 +329,7 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const getPendingLocations = (): string[] => {
-    return LOCATIONS
+    return locations
       .filter(location => 
         !currentMonthAudit.locationAudits.some(
           audit => audit.locationId === location.id && audit.completed
@@ -290,7 +364,7 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     csvContent += "Audit 6S - Historique complet\n\n";
     
     csvContent += "Année,Mois,Groupe,Local,Date d'audit,";
-    PILLARS.forEach(pillar => {
+    pillars.forEach(pillar => {
       csvContent += `${pillar.name} - Score,${pillar.name} - Commentaires,`;
     });
     csvContent += "Score Global\n";
@@ -299,10 +373,10 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       monthAudit.locationAudits.forEach(audit => {
         if (!audit.completed) return;
         
-        const location = LOCATIONS.find(l => l.id === audit.locationId);
+        const location = locations.find(l => l.id === audit.locationId);
         if (!location) return;
         
-        const group = LOCATION_GROUPS.find(g => g.id === location.groupId);
+        const group = locationGroups.find(g => g.id === location.groupId);
         const auditDate = new Date(audit.date).toLocaleDateString('fr-FR');
         const monthName = new Date(parseInt(monthAudit.month.split('-')[0]), 
                                  parseInt(monthAudit.month.split('-')[1]) - 1)
@@ -310,7 +384,7 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         
         let row = `${audit.year},${monthName},${group?.name || ''},${location.name},${auditDate},`;
         
-        PILLARS.forEach(pillar => {
+        pillars.forEach(pillar => {
           const evaluation = audit.evaluations.find(e => e.pillarId === pillar.id);
           row += evaluation 
             ? `${evaluation.score},"${evaluation.comment.replace(/"/g, '""')}"` 
@@ -329,7 +403,7 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                          .toLocaleDateString('fr-FR', { month: 'long' });
         
         csvContent += `${monthAudit.year},${monthName},GLOBAL,SCORE MENSUEL GLOBAL,,`;
-        PILLARS.forEach(() => csvContent += ",,");
+        pillars.forEach(() => csvContent += ",,");
         csvContent += `${monthAudit.overallScore.toFixed(1)}\n`;
       }
       
@@ -401,6 +475,10 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         calculateOverallScore,
         resetAllAudits,
         completeCorrectiveAction,
+        isLoading,
+        locations,
+        pillars,
+        locationGroups,
       }}
     >
       {children}
