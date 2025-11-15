@@ -340,19 +340,6 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
                 </div>
               </div>
             )}
-        
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Enregistrer
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-};
 
             {implementedSuggestions.length > 0 && (
               <div>
@@ -369,4 +356,18 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
             )}
           </div>
         )}
+        
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
 export default PillarEvaluationForm;
