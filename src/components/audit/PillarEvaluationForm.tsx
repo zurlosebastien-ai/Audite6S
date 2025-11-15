@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Pillar, PillarEvaluation, CorrectiveAction } from '../../types';
-import { Star, CheckCircle, XCircle, Plus, Check, Lightbulb as LightbulbIcon } from 'lucide-react';
+import { Pillar, PillarEvaluation, CorrectiveAction, ImprovementSuggestion } from '../../types';
+import { Star, CheckCircle, XCircle, Plus, Check, Lightbulb } from 'lucide-react';
 
 interface PillarEvaluationFormProps {
   pillar: Pillar;
@@ -21,7 +21,11 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
   const [correctiveActions, setCorrectiveActions] = useState<CorrectiveAction[]>(
     initialEvaluation?.correctiveActions || []
   );
+  const [improvementSuggestions, setImprovementSuggestions] = useState<ImprovementSuggestion[]>(
+    initialEvaluation?.improvementSuggestions || []
+  );
   const [newAction, setNewAction] = useState<string>('');
+  const [newSuggestion, setNewSuggestion] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -29,13 +33,10 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
     setComment('');
     setQuestionAnswers(initialEvaluation?.questionAnswers || {});
     setCorrectiveActions(initialEvaluation?.correctiveActions || []);
+    setImprovementSuggestions(initialEvaluation?.improvementSuggestions || []);
   }, [pillar.id]);
 
   const calculateScore = (answers: Record<string, boolean>): number => {
-    if (pillar.id === 'people') {
-      return 0;
-    }
-
     const totalQuestions = pillar.questions.length;
     if (totalQuestions === 0) return 0;
 
@@ -46,17 +47,6 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (pillar.id === 'people') {
-      onSave({
-        pillarId: pillar.id,
-        score: 0,
-        comment: comment.trim(),
-        questionAnswers: {},
-        correctiveActions: []
-      });
-      return;
-    }
-
     const newErrors: Record<string, string> = {};
     let hasErrors = false;
     
@@ -79,7 +69,8 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
       score: finalScore,
       comment,
       questionAnswers,
-      correctiveActions
+      correctiveActions,
+      improvementSuggestions
     });
   };
 
@@ -116,12 +107,38 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
     setNewAction('');
   };
 
+  const handleAddSuggestion = () => {
+    if (!newSuggestion.trim()) return;
+
+    const suggestion: ImprovementSuggestion = {
+      id: crypto.randomUUID(),
+      description: newSuggestion.trim(),
+      locationId: '', // Will be set by the parent component
+      pillarId: pillar.id,
+      createdAt: new Date().toISOString(),
+      status: 'pending'
+    };
+
+    setImprovementSuggestions([...improvementSuggestions, suggestion]);
+    setNewSuggestion('');
+  };
+
   const handleCompleteAction = (actionId: string) => {
     setCorrectiveActions(actions =>
       actions.map(action =>
         action.id === actionId
           ? { ...action, status: 'completed', completedAt: new Date().toISOString() }
           : action
+      )
+    );
+  };
+
+  const handleImplementSuggestion = (suggestionId: string) => {
+    setImprovementSuggestions(suggestions =>
+      suggestions.map(suggestion =>
+        suggestion.id === suggestionId
+          ? { ...suggestion, status: 'implemented', implementedAt: new Date().toISOString() }
+          : suggestion
       )
     );
   };
@@ -134,46 +151,8 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
   const pendingActions = correctiveActions.filter(action => action.status === 'pending');
   const completedActions = correctiveActions.filter(action => action.status === 'completed');
 
-  if (pillar.id === 'people') {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-2">{pillar.name}</h2>
-          <p className="text-gray-600">{pillar.description}</p>
-        </div>
-        
-        <form onSubmit={handleSubmit}>
-          <div className="mb-6">
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4">
-              <p className="text-blue-800">
-                Commentaire recommandé pour valoriser les initiatives et proposer des pistes d'amélioration.
-              </p>
-            </div>
-            
-            <label className="block text-gray-700 mb-2">
-              {pillar.questions[0].text}
-            </label>
-            <textarea
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={4}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Partagez vos suggestions d'amélioration..."
-            ></textarea>
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Enregistrer
-            </button>
-          </div>
-        </form>
-      </div>
-    );
-  }
+  const pendingSuggestions = improvementSuggestions.filter(suggestion => suggestion.status === 'pending');
+  const implementedSuggestions = improvementSuggestions.filter(suggestion => suggestion.status === 'implemented');
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -316,6 +295,52 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
           </>
         )}
         
+        {/* Improvement suggestions section for Shitsuke pillar */}
+        {pillar.id === 'shitsuke' && (
+          <div className="mb-6">
+            <h3 className="font-medium text-gray-700 mb-4 flex items-center">
+              <Lightbulb size={18} className="mr-2 text-blue-500" />
+              Suggestions d'amélioration continue :
+            </h3>
+            
+            <div className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={newSuggestion}
+                onChange={(e) => setNewSuggestion(e.target.value)}
+                placeholder="Nouvelle suggestion d'amélioration..."
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={handleAddSuggestion}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center"
+              >
+                <Plus size={18} className="mr-1" />
+                Ajouter
+              </button>
+            </div>
+
+            {pendingSuggestions.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-600 mb-2">Suggestions en cours :</h4>
+                <div className="space-y-2">
+                  {pendingSuggestions.map(suggestion => (
+                    <div key={suggestion.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-md">
+                      <span className="text-gray-700">{suggestion.description}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleImplementSuggestion(suggestion.id)}
+                        className="p-1 hover:bg-blue-100 rounded-full transition-colors"
+                      >
+                        <Check size={18} className="text-blue-600" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+        
         <div className="flex justify-end">
           <button
             type="submit"
@@ -329,4 +354,19 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
   );
 };
 
+            {implementedSuggestions.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-600 mb-2">Suggestions implémentées :</h4>
+                <div className="space-y-2">
+                  {implementedSuggestions.map(suggestion => (
+                    <div key={suggestion.id} className="flex items-center justify-between p-3 bg-green-50 rounded-md">
+                      <span className="text-gray-700">{suggestion.description}</span>
+                      <Check size={18} className="text-green-600" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 export default PillarEvaluationForm;

@@ -92,13 +92,5 @@ export const PILLARS: Pillar[] = [
       { id: 'quality_2', text: 'Les logbook papiers sont-ils documentés et revues dans les temps ?' },
       { id: 'quality_3', text: 'Pas de documents pirates présents dans les locaux ?' }
     ]
-  },
-  {
-    id: 'people',
-    name: 'People (Amélioration)',
-    description: 'Favoriser l\'amélioration continue',
-    questions: [
-      { id: 'people_1', text: 'Comment pensez-vous que nous pourrions améliorer nos locaux pour mieux répondre à vos besoins ou attentes ?' }
-    ]
   }
 ];

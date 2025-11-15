@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { Download } from 'lucide-react';
 import { useAudit } from '../../context/AuditContext';
 import Chart from 'chart.js/auto';
+import DashboardCharts from './DashboardCharts';
 
 const MonthlyReport: React.FC = () => {
   const { currentMonthAudit, exportToExcel, isLoading, locations, pillars, locationGroups } = useAudit();
@@ -106,6 +107,9 @@ const MonthlyReport: React.FC = () => {
   
   return (
     <div className="space-y-8">
+      {/* Dashboard with charts */}
+      <DashboardCharts />
+      
       {locationGroups.map(group => {
         const groupLocations = locations.filter(loc => loc.groupId === group.id);
         const completedAudits = currentMonthAudit.locationAudits.filter(

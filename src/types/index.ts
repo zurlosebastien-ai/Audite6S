@@ -1,4 +1,4 @@
-export type PillarKey = 'seiri' | 'seiton' | 'seiso' | 'seiketsu' | 'shitsuke' | 'safety' | 'quality' | 'people';
+export type PillarKey = 'seiri' | 'seiton' | 'seiso' | 'seiketsu' | 'shitsuke' | 'safety' | 'quality';
 
 export interface AuditQuestion {
   id: string;
@@ -33,12 +33,23 @@ export interface CorrectiveAction {
   status: 'pending' | 'completed';
 }
 
+export interface ImprovementSuggestion {
+  id: string;
+  description: string;
+  locationId: string;
+  pillarId: PillarKey;
+  createdAt: string;
+  implementedAt?: string;
+  status: 'pending' | 'implemented';
+}
+
 export interface PillarEvaluation {
   pillarId: PillarKey;
   score: number;
   comment: string;
   questionAnswers?: Record<string, boolean>;
   correctiveActions: CorrectiveAction[];
+  improvementSuggestions: ImprovementSuggestion[];
 }
 
 export interface LocationAudit {

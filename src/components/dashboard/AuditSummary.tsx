@@ -23,11 +23,6 @@ const AuditSummary: React.FC = () => {
   
   // Calculate average scores per pillar
   const pillarAverages = pillars.map(pillar => {
-    // Skip 'people' pillar for scoring display
-    if (pillar.id === 'people') {
-      return null;
-    }
-    
     let totalScore = 0;
     let count = 0;
     
@@ -46,7 +41,7 @@ const AuditSummary: React.FC = () => {
       name: pillar.name.split(' ')[0], // Just the first part of the name
       average: count > 0 ? totalScore / count : 0,
     };
-  }).filter(Boolean); // Remove null values
+  });
   
   // Only display if we have completed audits
   const hasCompletedAudits = currentMonthAudit.locationAudits.some(audit => audit.completed);

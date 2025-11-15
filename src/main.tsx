@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import AuditPage from './pages/AuditPage';
 import ReportsPage from './pages/ReportsPage';
 import CorrectiveActionsPage from './pages/CorrectiveActionsPage';
+import ImprovementsPage from './pages/ImprovementsPage';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
@@ -19,6 +20,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="audit" element={<AuditPage />} />
             <Route path="audit/:locationId" element={<AuditPage />} />
             <Route path="actions" element={<CorrectiveActionsPage />} />
+            <Route path="improvements" element={<ImprovementsPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="reports/location/:locationId" element={<ReportsPage />} />
           </Route>

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { AuditHistory, LocationAudit, MonthlyAudit, PillarEvaluation, CorrectiveAction } from '../types';
+import { AuditHistory, LocationAudit, MonthlyAudit, PillarEvaluation, CorrectiveAction, ImprovementSuggestion } from '../types';
 import { AuditService } from '../services/auditService';
 
 // We'll still import constants as fallback, but load from database
@@ -17,6 +17,7 @@ interface AuditContextType {
   calculateOverallScore: (locationId: string) => number;
   resetAllAudits: () => void;
   completeCorrectiveAction: (actionId: string, locationId: string, pillarId: string) => void;
+  completeImprovementSuggestion: (suggestionId: string, locationId: string, pillarId: string) => void;
   isLoading: boolean;
   locations: typeof LOCATIONS;
   pillars: typeof PILLARS;
@@ -347,7 +348,7 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Exclude 'people' pillar from score calculation as it's qualitative only
     const scoredEvaluations = locationAudit.evaluations.filter(
-      evaluation => evaluation.pillarId !== 'people'
+      evaluation => evaluation.pillarId !== 'people' // This filter is now redundant but kept for safety
     );
 
     if (scoredEvaluations.length === 0) return 0;
@@ -461,6 +462,48 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
+  const completeImprovementSuggestion = (suggestionId: string, locationId: string, pillarId: string) => {
+    const updatedLocationAudits = currentMonthAudit.locationAudits.map(audit => {
+      if (audit.locationId === locationId) {
+        return {
+          ...audit,
+          evaluations: audit.evaluations.map(evaluation => {
+            if (evaluation.pillarId === pillarId) {
+              return {
+                ...evaluation,
+                improvementSuggestions: evaluation.improvementSuggestions?.map(suggestion =>
+                  suggestion.id === suggestionId
+                    ? { ...suggestion, status: 'implemented', implementedAt: new Date().toISOString() }
+                    : suggestion
+                ) || []
+              };
+            }
+            return evaluation;
+          })
+        };
+      }
+      return audit;
+    });
+
+    const updatedMonthlyAudit = {
+      ...currentMonthAudit,
+      locationAudits: updatedLocationAudits,
+      groupScores: calculateGroupScores(updatedLocationAudits)
+    };
+
+    setCurrentMonthAudit(updatedMonthlyAudit);
+    
+    setAuditHistory(prevHistory => {
+      const updatedAudits = prevHistory.audits.map(audit => 
+        audit.month === currentMonthAudit.month ? updatedMonthlyAudit : audit
+      );
+      
+      return {
+        audits: updatedAudits,
+      };
+    });
+  };
+
   return (
     <AuditContext.Provider
       value={{
@@ -475,6 +518,7 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         calculateOverallScore,
         resetAllAudits,
         completeCorrectiveAction,
+        completeImprovementSuggestion,
         isLoading,
         locations,
         pillars,

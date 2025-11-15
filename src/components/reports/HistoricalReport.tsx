@@ -39,6 +39,8 @@ const HistoricalReport: React.FC = () => {
         'rgba(16, 185, 129, 0.7)',
         'rgba(239, 68, 68, 0.7)',
         'rgba(245, 158, 11, 0.7)',
+        'rgba(147, 51, 234, 0.7)',
+        'rgba(236, 72, 153, 0.7)',
       ];
       
       const data = recentAudits.map(monthAudit => {

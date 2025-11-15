@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { ClipboardCheck, BarChart2, Home, CheckSquare } from 'lucide-react';
+import { ClipboardCheck, BarChart2, Home, CheckSquare, Lightbulb } from 'lucide-react';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -47,6 +47,17 @@ const Layout: React.FC = () => {
               >
                 <CheckSquare size={24} />
                 <span className="text-xs mt-1">Actions</span>
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to="/improvements" 
+                className={`flex flex-col items-center p-2 ${
+                  isActive('/improvements') ? 'text-blue-600' : 'text-gray-600'
+                }`}
+              >
+                <Lightbulb size={24} />
+                <span className="text-xs mt-1">Améliorations</span>
               </Link>
             </li>
             <li>
