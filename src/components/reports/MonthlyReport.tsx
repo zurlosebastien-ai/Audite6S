@@ -61,10 +61,7 @@ const MonthlyReport: React.FC = () => {
   const createPillarRadarData = (groupId: string) => {
     const groupLocations = locations.filter(loc => loc.groupId === groupId);
     
-    // Exclude 'people' pillar from radar chart as it's not scored
-    const scoredPillars = pillars.filter(pillar => pillar.id !== 'people');
-    
-    const pillarAverages = scoredPillars.map(pillar => {
+    const pillarAverages = pillars.map(pillar => {
       const scores = currentMonthAudit.locationAudits
         .filter(audit => audit.completed && groupLocations.some(loc => loc.id === audit.locationId))
         .map(audit => {
@@ -78,7 +75,7 @@ const MonthlyReport: React.FC = () => {
     });
     
     return {
-      labels: scoredPillars.map(pillar => pillar.name.split(' ')[0]),
+      labels: pillars.map(pillar => pillar.name.split(' ')[0]),
       datasets: [{
         label: 'Score moyen',
         data: pillarAverages,

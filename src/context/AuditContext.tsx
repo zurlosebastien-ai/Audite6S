@@ -346,18 +346,13 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (!locationAudit || locationAudit.evaluations.length === 0) return 0;
 
-    // Exclude 'people' pillar from score calculation as it's qualitative only
-    const scoredEvaluations = locationAudit.evaluations.filter(
-      evaluation => evaluation.pillarId !== 'people' // This filter is now redundant but kept for safety
-    );
+    if (locationAudit.evaluations.length === 0) return 0;
 
-    if (scoredEvaluations.length === 0) return 0;
-
-    const sum = scoredEvaluations.reduce(
+    const sum = locationAudit.evaluations.reduce(
       (total, evaluationItem) => total + evaluationItem.score, 0
     );
     
-    return sum / scoredEvaluations.length;
+    return sum / locationAudit.evaluations.length;
   };
 
   const exportToExcel = () => {

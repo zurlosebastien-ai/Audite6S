@@ -281,7 +281,6 @@ export class AuditService {
             { id: 'shitsuke', name: 'Shitsuke (Respecter)', description: 'Maintenir et respecter les normes établies' },
             { id: 'safety', name: 'Safety (Sécurité)', description: 'Assurer un environnement de travail sécuritaire' },
             { id: 'quality', name: 'Quality (Qualité)', description: 'Assurer la qualité des processus et des produits' },
-            { id: 'people', name: 'People (Amélioration)', description: 'Favoriser l\'amélioration continue' }
           ])
 
         if (pillarsError) throw pillarsError
@@ -329,7 +328,6 @@ export class AuditService {
           { pillar_id: 'quality', text: 'Pas de documents pirates présents dans les locaux ?', order_index: 3 },
           
           // People questions
-          { pillar_id: 'people', text: 'Comment pensez-vous que nous pourrions améliorer nos locaux pour mieux répondre à vos besoins ou attentes ?', order_index: 1 }
         ]
 
         const questionsWithIds = questions.map((q, index) => ({
