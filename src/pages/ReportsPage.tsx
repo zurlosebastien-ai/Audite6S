@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { BarChart as ChartBar, History } from 'lucide-react';
+import { BarChart as ChartBar, History, Calendar } from 'lucide-react';
 import MonthlyReport from '../components/reports/MonthlyReport';
 import HistoricalReport from '../components/reports/HistoricalReport';
+import AnnualReport from '../components/reports/AnnualReport';
 
-type ReportView = 'monthly' | 'historical';
+type ReportView = 'monthly' | 'historical' | 'annual';
 
 const ReportsPage: React.FC = () => {
   const { locationId } = useParams<{ locationId?: string }>();
@@ -28,6 +29,17 @@ const ReportsPage: React.FC = () => {
           <span>Mois en cours</span>
         </button>
         <button
+          onClick={() => setActiveView('annual')}
+          className={`flex-1 py-3 px-4 flex items-center justify-center transition-colors ${
+            activeView === 'annual' 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          <Calendar size={18} className="mr-2" />
+          <span>Vue annuelle</span>
+        </button>
+        <button
           onClick={() => setActiveView('historical')}
           className={`flex-1 py-3 px-4 flex items-center justify-center transition-colors ${
             activeView === 'historical' 
@@ -42,6 +54,7 @@ const ReportsPage: React.FC = () => {
       
       {/* Report content */}
       {activeView === 'monthly' && <MonthlyReport />}
+      {activeView === 'annual' && <AnnualReport />}
       {activeView === 'historical' && <HistoricalReport />}
     </div>
   );
