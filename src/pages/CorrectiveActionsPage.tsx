@@ -118,10 +118,16 @@ const CorrectiveActionsPage: React.FC = () => {
 
   if (allActions.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-bold mb-6">Actions correctives</h1>
-        <div className="text-center py-8 text-gray-500">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 p-6">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+          <h1 className="text-3xl font-bold mb-6 text-gray-800 flex items-center">
+            <AlertCircle className="mr-3 text-orange-600" size={32} />
+            Actions correctives
+          </h1>
+          <div className="text-center py-12 text-gray-500">
+          <AlertCircle size={48} className="mx-auto mb-4 text-gray-300" />
           Aucune action corrective n'a été enregistrée ce mois-ci.
+          </div>
         </div>
       </div>
     );
@@ -133,25 +139,28 @@ const CorrectiveActionsPage: React.FC = () => {
   const normalCount = pendingActions.filter(action => action.deadlineStatus?.status === 'normal').length;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Actions correctives</h1>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 p-6">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 flex items-center">
+          <AlertCircle className="mr-3 text-orange-600" size={32} />
+          Actions correctives
+        </h1>
         
         {/* Summary badges */}
         {pendingActions.length > 0 && (
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             {overdueCount > 0 && (
-              <span className="px-3 py-1 bg-red-100 text-red-800 text-sm font-medium rounded-full">
+              <span className="px-4 py-2 bg-gradient-to-r from-red-100 to-red-200 text-red-800 text-sm font-semibold rounded-full shadow-sm">
                 {overdueCount} en retard
               </span>
             )}
             {warningCount > 0 && (
-              <span className="px-3 py-1 bg-orange-100 text-orange-800 text-sm font-medium rounded-full">
+              <span className="px-4 py-2 bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 text-sm font-semibold rounded-full shadow-sm">
                 {warningCount} urgent(s)
               </span>
             )}
             {normalCount > 0 && (
-              <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-medium rounded-full">
+              <span className="px-4 py-2 bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 text-sm font-semibold rounded-full shadow-sm">
                 {normalCount} en cours
               </span>
             )}
@@ -159,40 +168,42 @@ const CorrectiveActionsPage: React.FC = () => {
         )}
       </div>
 
+      <div className="space-y-6">
       {sortedPendingActions.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+          <div className="flex items-center gap-3 mb-6">
             <AlertCircle className="text-yellow-500" />
-            <h2 className="text-xl font-semibold">Actions en cours</h2>
+            <h2 className="text-2xl font-bold text-gray-800">Actions en cours</h2>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-5">
             {sortedPendingActions.map(action => (
               <div
                 key={action.id}
-                className={`border rounded-lg p-4 ${getActionCardStyle(action.deadlineStatus)}`}
+                className={`border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 ${getActionCardStyle(action.deadlineStatus)}`}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{action.description}</p>
-                    <div className="mt-2 text-sm text-gray-600">
-                      <p>Local : {action.locationName}</p>
-                      <p>Pilier : {action.pillarName}</p>
-                      <p>Créée le : {new Date(action.createdAt).toLocaleDateString('fr-FR')}</p>
+                    <p className="font-semibold text-gray-900 text-lg mb-3">{action.description}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600 mb-3">
+                      <p><span className="font-medium">Local :</span> {action.locationName}</p>
+                      <p><span className="font-medium">Pilier :</span> {action.pillarName}</p>
+                      <p><span className="font-medium">Créée le :</span> {new Date(action.createdAt).toLocaleDateString('fr-FR')}</p>
+                    </div>
                       {action.deadlineStatus && (
-                        <div className="flex items-center gap-1 mt-1">
+                        <div className="flex items-center gap-2">
                           {getDeadlineIcon(action.deadlineStatus)}
-                          <span className={`font-medium ${getDeadlineTextColor(action.deadlineStatus)}`}>
+                          <span className={`font-semibold ${getDeadlineTextColor(action.deadlineStatus)}`}>
                             {getDeadlineText(action.deadlineStatus)}
                           </span>
                         </div>
                       )}
-                    </div>
                   </div>
                   <button
                     onClick={() => completeCorrectiveAction(action.id, action.locationId, action.pillarId)}
-                    className="p-2 hover:bg-white hover:bg-opacity-50 rounded-full transition-colors"
+                    className="p-3 hover:bg-white hover:bg-opacity-50 rounded-full transition-all duration-300 transform hover:scale-110 shadow-md"
+                    title="Marquer comme terminée"
                   >
-                    <Check size={20} className="text-green-600" />
+                    <Check size={22} className="text-green-600" />
                   </button>
                 </div>
               </div>
@@ -202,36 +213,38 @@ const CorrectiveActionsPage: React.FC = () => {
       )}
 
       {completedActions.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+          <div className="flex items-center gap-3 mb-6">
             <Check className="text-green-500" />
-            <h2 className="text-xl font-semibold">Actions effectuées</h2>
+            <h2 className="text-2xl font-bold text-gray-800">Actions effectuées</h2>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-5">
             {completedActions.map(action => (
               <div
                 key={action.id}
-                className="border border-green-200 bg-green-50 rounded-lg p-4"
+                className="border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 shadow-sm"
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium text-gray-900">{action.description}</p>
-                    <div className="mt-2 text-sm text-gray-600">
-                      <p>Local : {action.locationName}</p>
-                      <p>Pilier : {action.pillarName}</p>
-                      <p>Créée le : {new Date(action.createdAt).toLocaleDateString('fr-FR')}</p>
+                    <p className="font-semibold text-gray-900 text-lg mb-3">{action.description}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2 text-sm text-gray-600">
+                      <p><span className="font-medium">Local :</span> {action.locationName}</p>
+                      <p><span className="font-medium">Pilier :</span> {action.pillarName}</p>
+                      <p><span className="font-medium">Créée le :</span> {new Date(action.createdAt).toLocaleDateString('fr-FR')}</p>
                       {action.completedAt && (
-                        <p>Terminée le : {new Date(action.completedAt).toLocaleDateString('fr-FR')}</p>
+                        <p><span className="font-medium">Terminée le :</span> {new Date(action.completedAt).toLocaleDateString('fr-FR')}</p>
                       )}
                     </div>
                   </div>
-                  <Check size={20} className="text-green-600" />
+                  <Check size={24} className="text-green-600" />
                 </div>
               </div>
             ))}
           </div>
         </div>
       )}
+      </div>
+    </div>
     </div>
   );
 };

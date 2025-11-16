@@ -44,33 +44,15 @@ const AuditStatus: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h2 className="text-xl font-semibold mb-4">
+    <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">
         Audit du mois : {getMonthName(currentMonthAudit.month)}
       </h2>
-
-      {/* Progress bar */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-700">
-            {completedCount} sur {locations.length} locaux audités
-          </span>
-          <span className="text-sm font-medium text-gray-700">
-            {progress.toFixed(0)}%
-          </span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
-          <div 
-            className="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-in-out" 
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-      </div>
 
       {/* Group scores */}
       {currentMonthAudit.groupScores.length > 0 && (
         <div className="mb-6">
-          <h3 className="font-medium text-gray-700 mb-3">Scores par groupe :</h3>
+          <h3 className="font-semibold text-gray-800 mb-4 text-lg">Scores par groupe</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {locationGroups.map(group => {
               const groupScore = getGroupScore(group.id);
@@ -82,14 +64,14 @@ const AuditStatus: React.FC = () => {
               if (completedGroupAudits.length === 0) return null;
               
               return (
-                <div key={group.id} className="bg-blue-50 p-4 rounded-md border border-blue-200">
+                <div key={group.id} className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100 shadow-sm">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium text-blue-900">{group.name}</span>
-                    <span className="text-lg font-bold text-blue-700">
+                    <span className="font-semibold text-blue-900 text-lg">{group.name}</span>
+                    <span className="text-2xl font-bold text-blue-700">
                       {groupScore.toFixed(1)}/10
                     </span>
                   </div>
-                  <div className="text-sm text-blue-600 mt-1">
+                  <div className="text-sm text-blue-600 mt-2 font-medium">
                     {completedGroupAudits.length}/{groupLocations.length} locaux audités
                   </div>
                 </div>
@@ -100,13 +82,13 @@ const AuditStatus: React.FC = () => {
       )}
 
       {/* Location status list grouped by group */}
-      <h3 className="font-medium text-gray-700 mb-3">État des locaux :</h3>
+      <h3 className="font-semibold text-gray-800 mb-4 text-lg">État des locaux</h3>
       {locationGroups.map(group => {
         const groupLocations = locations.filter(loc => loc.groupId === group.id);
         
         return (
           <div key={group.id} className="mb-6">
-            <h4 className="text-sm font-medium text-gray-600 mb-2 uppercase tracking-wide">
+            <h4 className="text-sm font-semibold text-gray-500 mb-3 uppercase tracking-wider">
               {group.name}
             </h4>
             <ul className="space-y-3">
@@ -123,17 +105,17 @@ const AuditStatus: React.FC = () => {
                   null;
                 
                 return (
-                  <li key={location.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                  <li key={location.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200">
                     <div className="flex items-center">
                       {statusIcon}
-                      <span className="ml-3">{location.name}</span>
+                      <span className="ml-3 font-medium text-gray-800">{location.name}</span>
                     </div>
                     <div className="flex items-center">
                       {scoreDisplay}
                       {isPending && (
                         <button 
                           onClick={() => handleStartAudit(location.id)}
-                          className="ml-4 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                          className="ml-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 font-medium shadow-md"
                         >
                           Auditer
                         </button>
@@ -141,7 +123,7 @@ const AuditStatus: React.FC = () => {
                       {!isPending && scoreDisplay && (
                         <button 
                           onClick={() => navigate(`/reports/location/${location.id}`)}
-                          className="ml-4 px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 transition-colors"
+                          className="ml-4 px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300 transition-all duration-300 font-medium"
                         >
                           Détails
                         </button>
@@ -157,20 +139,20 @@ const AuditStatus: React.FC = () => {
 
       {/* Monthly summary if completed */}
       {currentMonthAudit.completed && currentMonthAudit.overallScore !== undefined && (
-        <div className="mt-6 p-4 bg-blue-50 rounded-md border border-blue-200">
+        <div className="mt-6 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <CheckCircle size={24} className="text-blue-600" />
-              <span className="ml-2 font-medium">Audit mensuel terminé</span>
+              <CheckCircle size={24} className="text-green-600" />
+              <span className="ml-3 font-semibold text-green-800 text-lg">Audit mensuel terminé</span>
             </div>
-            <div className="text-lg font-semibold">
+            <div className="text-xl font-bold text-green-700">
               Score global: {currentMonthAudit.overallScore.toFixed(1)}/10
             </div>
           </div>
           <div className="mt-2 flex justify-end">
             <button 
               onClick={() => navigate('/reports')}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 font-medium shadow-lg"
             >
               Voir le rapport
             </button>
