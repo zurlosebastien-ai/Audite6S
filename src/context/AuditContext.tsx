@@ -167,27 +167,9 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const resetAllAudits = () => {
-    try {
-      // Clear localStorage if it exists
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('auditHistory');
-        localStorage.removeItem('currentMonthAudit');
-      }
-      
-      // Reset state
-      const newMonthlyAudit = createNewMonthlyAudit();
-      setCurrentMonthAudit(newMonthlyAudit);
-      setAuditHistory({ audits: [] });
-      
-      // If Supabase is configured, also clear database
-      if (isSupabaseConfigured && supabase) {
-        // Note: In a real app, you might want to be more selective about what to delete
-        // For now, we'll just reset the local state
-        console.log('Audits reset successfully');
-      }
-    } catch (error) {
-      console.error('Error resetting audits:', error);
-    }
+    const newMonthlyAudit = createNewMonthlyAudit();
+    setCurrentMonthAudit(newMonthlyAudit);
+    setAuditHistory({ audits: [] });
   };
 
   const startLocationAudit = (locationId: string) => {
