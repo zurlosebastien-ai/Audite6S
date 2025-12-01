@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Circle, AlertCircle } from 'lucide-react';
+import { CheckCircle, Circle, Calendar, MapPin } from 'lucide-react';
 import { useAudit } from '../../context/AuditContext';
 
 const AuditStatus: React.FC = () => {
@@ -9,7 +9,7 @@ const AuditStatus: React.FC = () => {
   
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
           <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
@@ -44,10 +44,13 @@ const AuditStatus: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h2 className="text-xl font-semibold mb-4">
-        Audit du mois : {getMonthName(currentMonthAudit.month)}
-      </h2>
+    <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="flex items-center mb-6">
+        <Calendar className="text-blue-500 mr-3" size={24} />
+        <h2 className="text-xl font-semibold text-gray-900">
+          Audit du mois : {getMonthName(currentMonthAudit.month)}
+        </h2>
+      </div>
 
       {/* Progress bar */}
       <div className="mb-6">
@@ -59,9 +62,9 @@ const AuditStatus: React.FC = () => {
             {progress.toFixed(0)}%
           </span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
+        <div className="w-full bg-gray-200 rounded-full h-3">
           <div 
-            className="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-in-out" 
+            className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 ease-in-out shadow-sm" 
             style={{ width: `${progress}%` }}
           ></div>
         </div>
@@ -70,7 +73,10 @@ const AuditStatus: React.FC = () => {
       {/* Group scores */}
       {currentMonthAudit.groupScores.length > 0 && (
         <div className="mb-6">
-          <h3 className="font-medium text-gray-700 mb-3">Scores par groupe :</h3>
+          <h3 className="font-medium text-gray-700 mb-3 flex items-center">
+            <MapPin size={18} className="mr-2 text-gray-500" />
+            Scores par groupe :
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {locationGroups.map(group => {
               const groupScore = getGroupScore(group.id);
@@ -82,7 +88,7 @@ const AuditStatus: React.FC = () => {
               if (completedGroupAudits.length === 0) return null;
               
               return (
-                <div key={group.id} className="bg-blue-50 p-4 rounded-md border border-blue-200">
+                <div key={group.id} className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200 hover:shadow-md transition-shadow duration-200">
                   <div className="flex justify-between items-center">
                     <span className="font-medium text-blue-900">{group.name}</span>
                     <span className="text-lg font-bold text-blue-700">
@@ -123,7 +129,7 @@ const AuditStatus: React.FC = () => {
                   null;
                 
                 return (
-                  <li key={location.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                  <li key={location.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                     <div className="flex items-center">
                       {statusIcon}
                       <span className="ml-3">{location.name}</span>
@@ -133,7 +139,7 @@ const AuditStatus: React.FC = () => {
                       {isPending && (
                         <button 
                           onClick={() => handleStartAudit(location.id)}
-                          className="ml-4 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                          className="ml-4 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
                         >
                           Auditer
                         </button>
@@ -141,7 +147,7 @@ const AuditStatus: React.FC = () => {
                       {!isPending && scoreDisplay && (
                         <button 
                           onClick={() => navigate(`/reports/location/${location.id}`)}
-                          className="ml-4 px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 transition-colors"
+                          className="ml-4 px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300 transition-colors"
                         >
                           Détails
                         </button>
@@ -157,10 +163,10 @@ const AuditStatus: React.FC = () => {
 
       {/* Monthly summary if completed */}
       {currentMonthAudit.completed && currentMonthAudit.overallScore !== undefined && (
-        <div className="mt-6 p-4 bg-blue-50 rounded-md border border-blue-200">
+        <div className="mt-6 p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <CheckCircle size={24} className="text-blue-600" />
+              <CheckCircle size={24} className="text-green-600" />
               <span className="ml-2 font-medium">Audit mensuel terminé</span>
             </div>
             <div className="text-lg font-semibold">
@@ -170,7 +176,7 @@ const AuditStatus: React.FC = () => {
           <div className="mt-2 flex justify-end">
             <button 
               onClick={() => navigate('/reports')}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
             >
               Voir le rapport
             </button>

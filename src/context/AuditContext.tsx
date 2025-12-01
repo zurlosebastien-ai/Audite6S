@@ -167,9 +167,25 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const resetAllAudits = () => {
-    const newMonthlyAudit = createNewMonthlyAudit();
-    setCurrentMonthAudit(newMonthlyAudit);
-    setAuditHistory({ audits: [] });
+    try {
+      // Clear localStorage
+      localStorage.removeItem('auditHistory');
+      localStorage.removeItem('currentMonthAudit');
+      
+      // Reset state
+      const newMonthlyAudit = createNewMonthlyAudit();
+      setCurrentMonthAudit(newMonthlyAudit);
+      setAuditHistory({ audits: [] });
+      
+      // Force a page reload to ensure clean state
+      window.location.reload();
+    } catch (error) {
+      console.error('Error resetting audits:', error);
+      // Fallback: just reset state without localStorage
+      const newMonthlyAudit = createNewMonthlyAudit();
+      setCurrentMonthAudit(newMonthlyAudit);
+      setAuditHistory({ audits: [] });
+    }
   };
 
   const startLocationAudit = (locationId: string) => {

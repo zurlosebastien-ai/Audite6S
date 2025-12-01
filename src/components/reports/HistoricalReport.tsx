@@ -1,14 +1,14 @@
 import React, { useRef, useEffect } from 'react';
 import { useAudit } from '../../context/AuditContext';
-import Chart from 'chart.js/auto';
+import { History, TrendingUp, Award, Calendar } from 'lucide-react';
+import DashboardCharts from './DashboardCharts';
 
 const HistoricalReport: React.FC = () => {
-  const { auditHistory, isLoading, locations, pillars } = useAudit();
-  const trendChartRef = useRef<HTMLCanvasElement>(null);
+  const { auditHistory, currentMonthAudit, isLoading, locations } = useAudit();
   
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded w-1/3 mb-6"></div>
           <div className="h-80 bg-gray-200 rounded mb-8"></div>
@@ -27,112 +27,47 @@ const HistoricalReport: React.FC = () => {
       .toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
   };
   
-  const recentAudits = [...auditHistory.audits]
+  const allAudits = [...auditHistory.audits, currentMonthAudit];
+  const completedAudits = allAudits
     .filter(audit => audit.completed)
     .sort((a, b) => a.month.localeCompare(b.month))
-    .slice(-6);
+    .slice(-12);
   
-  const createTrendChartData = () => {
-    const datasets = locations.map((location, index) => {
-      const colors = [
-        'rgba(59, 130, 246, 0.7)',
-        'rgba(16, 185, 129, 0.7)',
-        'rgba(239, 68, 68, 0.7)',
-        'rgba(245, 158, 11, 0.7)',
-        'rgba(147, 51, 234, 0.7)',
-        'rgba(236, 72, 153, 0.7)',
-      ];
-      
-      const data = recentAudits.map(monthAudit => {
-        const locationAudit = monthAudit.locationAudits.find(
-          audit => audit.locationId === location.id && audit.completed
-        );
-        return locationAudit?.overallScore || null;
-      });
-      
-      return {
-        label: location.name,
-        data,
-        borderColor: colors[index % colors.length],
-        backgroundColor: colors[index % colors.length].replace('0.7', '0.1'),
-        tension: 0.2,
-      };
-    });
-    
-    datasets.push({
-      label: 'Score Global Mensuel',
-      data: recentAudits.map(audit => audit.overallScore || null),
-      borderColor: 'rgba(124, 58, 237, 0.7)',
-      backgroundColor: 'rgba(124, 58, 237, 0.1)',
-      borderWidth: 2,
-      tension: 0.2,
-    });
-    
-    return {
-      labels: recentAudits.map(audit => formatMonth(audit.month)),
-      datasets
-    };
-  };
+  // Calculate historical KPIs
+  const currentYear = new Date().getFullYear();
+  const yearlyAudits = completedAudits.filter(audit => audit.year === currentYear);
+  const previousYearAudits = completedAudits.filter(audit => audit.year === currentYear - 1);
   
-  useEffect(() => {
-    let trendChart: Chart | null = null;
-    
-    if (trendChartRef.current && recentAudits.length > 0) {
-      const ctx = trendChartRef.current.getContext('2d');
-      if (ctx) {
-        trendChart = new Chart(ctx, {
-          type: 'line',
-          data: createTrendChartData(),
-          options: {
-            scales: {
-              y: {
-                beginAtZero: true,
-                max: 10,
-                title: {
-                  display: true,
-                  text: 'Score'
-                }
-              },
-              x: {
-                title: {
-                  display: true,
-                  text: 'Mois'
-                }
-              }
-            },
-            plugins: {
-              title: {
-                display: true,
-                text: 'Évolution des scores au fil du temps'
-              },
-              tooltip: {
-                mode: 'index',
-                intersect: false,
-                callbacks: {
-                  title: (context) => {
-                    const index = context[0].dataIndex;
-                    const audit = recentAudits[index];
-                    return `${formatMonth(audit.month)} (${audit.year})`;
-                  }
-                }
-              }
-            },
-            responsive: true,
-            maintainAspectRatio: false
-          }
-        });
-      }
-    }
-    
-    return () => {
-      if (trendChart) trendChart.destroy();
-    };
-  }, [auditHistory]);
+  const yearlyAverage = yearlyAudits.length > 0
+    ? yearlyAudits.reduce((sum, audit) => sum + (audit.overallScore || 0), 0) / yearlyAudits.length
+    : 0;
   
-  if (recentAudits.length === 0) {
+  const previousYearAverage = previousYearAudits.length > 0
+    ? previousYearAudits.reduce((sum, audit) => sum + (audit.overallScore || 0), 0) / previousYearAudits.length
+    : 0;
+
+  const yearOverYearGrowth = previousYearAverage > 0
+    ? ((yearlyAverage - previousYearAverage) / previousYearAverage) * 100
+    : 0;
+
+  // Find best and worst performing months
+  const bestMonth = completedAudits.reduce((best, current) => 
+    (current.overallScore || 0) > (best.overallScore || 0) ? current : best,
+    { overallScore: 0, month: '', year: 0 }
+  );
+
+  const worstMonth = completedAudits.reduce((worst, current) => 
+    (current.overallScore || 10) < (worst.overallScore || 10) ? current : worst,
+    { overallScore: 10, month: '', year: 0 }
+  );
+
+  if (completedAudits.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4">Historique des audits</h2>
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex items-center mb-6">
+          <History className="text-blue-500 mr-3" size={24} />
+          <h2 className="text-2xl font-semibold text-gray-900">Historique des audits</h2>
+        </div>
         <div className="text-center py-8 text-gray-500">
           Aucune donnée historique disponible.
         </div>
@@ -141,53 +76,142 @@ const HistoricalReport: React.FC = () => {
   }
   
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold mb-6">Historique des audits</h2>
-      
-      <div className="h-80 mb-8">
-        <canvas ref={trendChartRef}></canvas>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex items-center mb-6">
+          <History className="text-blue-500 mr-3" size={28} />
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-900">Historique des audits</h2>
+            <p className="text-gray-600 mt-1">Vision annuelle et tendances historiques</p>
+          </div>
+        </div>
+
+        {/* Historical KPIs */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-xl text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Score Annuel {currentYear}</p>
+                <p className="text-3xl font-bold">{yearlyAverage.toFixed(1)}/10</p>
+                <p className="text-blue-100 text-xs mt-1">{yearlyAudits.length} audits</p>
+              </div>
+              <div className="bg-blue-400 bg-opacity-30 rounded-full p-3">
+                <Award size={24} />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-xl text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Évolution Annuelle</p>
+                <p className="text-3xl font-bold">
+                  {yearOverYearGrowth > 0 ? '+' : ''}{yearOverYearGrowth.toFixed(1)}%
+                </p>
+                <p className="text-green-100 text-xs mt-1">vs {currentYear - 1}</p>
+              </div>
+              <div className="bg-green-400 bg-opacity-30 rounded-full p-3">
+                <TrendingUp size={24} />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-xl text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium">Meilleur Mois</p>
+                <p className="text-xl font-bold">{formatMonth(bestMonth.month)}</p>
+                <p className="text-purple-100 text-xs mt-1">{bestMonth.overallScore?.toFixed(1)}/10</p>
+              </div>
+              <div className="bg-purple-400 bg-opacity-30 rounded-full p-3">
+                <Award size={24} />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-xl text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm font-medium">Total Audits</p>
+                <p className="text-3xl font-bold">{completedAudits.length}</p>
+                <p className="text-orange-100 text-xs mt-1">Historique complet</p>
+              </div>
+              <div className="bg-orange-400 bg-opacity-30 rounded-full p-3">
+                <Calendar size={24} />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Dashboard with historical view */}
+      <DashboardCharts />
       
-      <h3 className="font-medium text-gray-700 mb-4">Scores mensuels :</h3>
-      <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-100 border-b border-gray-200">
-              <th className="p-3 text-left font-medium text-gray-700">Année</th>
-              <th className="p-3 text-left font-medium text-gray-700">Mois</th>
-              {locations.map(location => (
-                <th key={location.id} className="p-3 text-left font-medium text-gray-700">
-                  {location.name}
-                </th>
-              ))}
-              <th className="p-3 text-left font-medium text-gray-700">Global</th>
-            </tr>
-          </thead>
-          <tbody>
-            {recentAudits.map(monthAudit => (
-              <tr key={monthAudit.month} className="border-b border-gray-200 hover:bg-gray-50">
-                <td className="p-3">{monthAudit.year}</td>
-                <td className="p-3">{formatMonth(monthAudit.month)}</td>
-                
-                {locations.map(location => {
-                  const locationAudit = monthAudit.locationAudits.find(
-                    audit => audit.locationId === location.id && audit.completed
-                  );
-                  
-                  return (
-                    <td key={location.id} className="p-3">
-                      {locationAudit?.overallScore?.toFixed(1) || "-"}
-                    </td>
-                  );
-                })}
-                
-                <td className="p-3 font-medium">
-                  {monthAudit.overallScore?.toFixed(1) || "-"}
-                </td>
+      {/* Historical Data Table */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <h3 className="text-xl font-semibold text-gray-900 mb-6">Données historiques détaillées</h3>
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-collapse">
+            <thead>
+              <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                <th className="p-4 text-left font-semibold text-gray-700">Année</th>
+                <th className="p-4 text-left font-semibold text-gray-700">Mois</th>
+                {locations.map(location => (
+                  <th key={location.id} className="p-4 text-left font-semibold text-gray-700">
+                    {location.name}
+                  </th>
+                ))}
+                <th className="p-4 text-left font-semibold text-gray-700">Score Global</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {completedAudits.map(monthAudit => (
+                <tr key={monthAudit.month} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                  <td className="p-4 font-medium">{monthAudit.year}</td>
+                  <td className="p-4">{formatMonth(monthAudit.month)}</td>
+                  
+                  {locations.map(location => {
+                    const locationAudit = monthAudit.locationAudits.find(
+                      audit => audit.locationId === location.id && audit.completed
+                    );
+                    const score = locationAudit?.overallScore;
+                    
+                    return (
+                      <td key={location.id} className="p-4">
+                        {score !== undefined ? (
+                          <span className={`font-medium ${
+                            score >= 8 ? 'text-green-600' : 
+                            score >= 6 ? 'text-yellow-600' : 
+                            'text-red-600'
+                          }`}>
+                            {score.toFixed(1)}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                  
+                  <td className="p-4">
+                    {monthAudit.overallScore !== undefined ? (
+                      <span className={`font-bold text-lg ${
+                        monthAudit.overallScore >= 8 ? 'text-green-600' : 
+                        monthAudit.overallScore >= 6 ? 'text-yellow-600' : 
+                        'text-red-600'
+                      }`}>
+                        {monthAudit.overallScore.toFixed(1)}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
