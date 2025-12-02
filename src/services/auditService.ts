@@ -5,7 +5,7 @@ export class AuditService {
   // Get all monthly audits with their related data
   static async getAllAudits(): Promise<MonthlyAudit[]> {
     if (!isSupabaseConfigured || !supabase) {
-      console.warn('Supabase not configured, returning empty audits')
+      console.log('Supabase non configuré, retour d\'audits vides')
       return []
     }
 
@@ -127,7 +127,7 @@ export class AuditService {
   // Save a monthly audit to the database
   static async saveMonthlyAudit(audit: MonthlyAudit): Promise<void> {
     if (!isSupabaseConfigured || !supabase) {
-      console.warn('Supabase not configured, skipping save')
+      console.log('Supabase non configuré, sauvegarde ignorée')
       return
     }
 
@@ -234,7 +234,7 @@ export class AuditService {
   // Initialize database with default data if empty
   static async initializeDatabase(): Promise<void> {
     if (!isSupabaseConfigured || !supabase) {
-      console.warn('Supabase not configured, skipping database initialization')
+      console.log('Supabase non configuré, initialisation de la base ignorée')
       return
     }
 
@@ -350,7 +350,7 @@ export class AuditService {
   // Load configuration data (groups, locations, pillars, questions)
   static async loadConfiguration() {
     if (!isSupabaseConfigured || !supabase) {
-      console.warn('Supabase not configured, returning empty configuration')
+      console.log('Supabase non configuré, retour de configuration vide')
       return {
         groups: [],
         locations: [],

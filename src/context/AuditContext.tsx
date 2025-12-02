@@ -66,88 +66,73 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try {
         setIsLoading(true);
         
-        // Check if Supabase is configured before trying to use it
-        const { isSupabaseConfigured } = await import('../lib/supabase');
+        // Always try to use Supabase first
+        const { isSupabaseConfigured, supabase } = await import('../lib/supabase');
         
         if (isSupabaseConfigured) {
-          // Initialize database with default data if needed
-          await AuditService.initializeDatabase();
+          console.log('Supabase configuré, chargement des données depuis la base...');
           
-          // Load configuration data
-          const config = await AuditService.loadConfiguration();
-          
-          // Transform database data to match our types
-          if (config.groups.length > 0) {
-            setLocationGroups(config.groups.map(g => ({ id: g.id, name: g.name })));
-          }
-          
-          if (config.locations.length > 0) {
-            setLocations(config.locations.map(l => ({ 
-              id: l.id, 
-              name: l.name, 
-              groupId: l.group_id 
-            })));
-          }
-          
-          if (config.pillars.length > 0 && config.questions.length > 0) {
-            const pillarsWithQuestions = config.pillars.map(pillar => {
-              const pillarQuestions = config.questions
-                .filter(q => q.pillar_id === pillar.id)
-                .map(q => ({ id: q.id, text: q.text }));
-              
-              return {
-                id: pillar.id as any,
-                name: pillar.name,
-                description: pillar.description,
-                questions: pillarQuestions
-              };
-            });
-            setPillars(pillarsWithQuestions);
-          }
-          
-          // Load audit history from database
-          const audits = await AuditService.getAllAudits();
-          setAuditHistory({ audits });
-          
-          // Set current month audit
-          const currentMonth = getCurrentMonth();
-          const existingAudit = audits.find(audit => audit.month === currentMonth);
-          
-          if (existingAudit) {
-            setCurrentMonthAudit(existingAudit);
-          } else {
-            setCurrentMonthAudit(createNewMonthlyAudit());
+          try {
+            // Initialize database with default data if needed
+            await AuditService.initializeDatabase();
+            
+            // Load configuration data
+            const config = await AuditService.loadConfiguration();
+            
+            // Transform database data to match our types
+            if (config.groups.length > 0) {
+              setLocationGroups(config.groups.map(g => ({ id: g.id, name: g.name })));
+            }
+            
+            if (config.locations.length > 0) {
+              setLocations(config.locations.map(l => ({ 
+                id: l.id, 
+                name: l.name, 
+                groupId: l.group_id 
+              })));
+            }
+            
+            if (config.pillars.length > 0 && config.questions.length > 0) {
+              const pillarsWithQuestions = config.pillars.map(pillar => {
+                const pillarQuestions = config.questions
+                  .filter(q => q.pillar_id === pillar.id)
+                  .map(q => ({ id: q.id, text: q.text }));
+                
+                return {
+                  id: pillar.id as any,
+                  name: pillar.name,
+                  description: pillar.description,
+                  questions: pillarQuestions
+                };
+              });
+              setPillars(pillarsWithQuestions);
+            }
+            
+            // Load audit history from database
+            const audits = await AuditService.getAllAudits();
+            setAuditHistory({ audits });
+            
+            // Set current month audit
+            const currentMonth = getCurrentMonth();
+            const existingAudit = audits.find(audit => audit.month === currentMonth);
+            
+            if (existingAudit) {
+              setCurrentMonthAudit(existingAudit);
+            } else {
+              setCurrentMonthAudit(createNewMonthlyAudit());
+            }
+            
+            console.log('Données chargées depuis Supabase avec succès');
+            return; // Exit early if Supabase works
+          } catch (supabaseError) {
+            console.error('Erreur lors du chargement depuis Supabase:', supabaseError);
+            console.log('Basculement vers le stockage local...');
           }
         } else {
-          // Use local constants when Supabase is not configured
-          console.log('Supabase not configured, using local data');
-          
-          // Load from localStorage if available
-          const savedHistory = localStorage.getItem('auditHistory');
-          const savedCurrentAudit = localStorage.getItem('currentMonthAudit');
-          
-          if (savedHistory) {
-            try {
-              const parsedHistory = JSON.parse(savedHistory);
-              setAuditHistory(parsedHistory);
-            } catch (e) {
-              console.warn('Failed to parse saved audit history');
-            }
-          }
-          
-          if (savedCurrentAudit) {
-            try {
-              const parsedCurrentAudit = JSON.parse(savedCurrentAudit);
-              setCurrentMonthAudit(parsedCurrentAudit);
-            } catch (e) {
-              console.warn('Failed to parse saved current audit');
-            }
-          }
+          console.log('Supabase non configuré, utilisation du stockage local');
         }
         
-      } catch (error) {
-        console.error('Error initializing data:', error);
-        // Use local constants as fallback and load from localStorage
+        // Fallback to localStorage (when Supabase is not configured or fails)
         const savedHistory = localStorage.getItem('auditHistory');
         const savedCurrentAudit = localStorage.getItem('currentMonthAudit');
         
@@ -156,7 +141,7 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const parsedHistory = JSON.parse(savedHistory);
             setAuditHistory(parsedHistory);
           } catch (e) {
-            console.warn('Failed to parse saved audit history');
+            console.warn('Échec du parsing de l\'historique sauvegardé');
           }
         }
         
@@ -165,7 +150,31 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const parsedCurrentAudit = JSON.parse(savedCurrentAudit);
             setCurrentMonthAudit(parsedCurrentAudit);
           } catch (e) {
-            console.warn('Failed to parse saved current audit');
+            console.warn('Échec du parsing de l\'audit courant sauvegardé');
+          }
+        }
+        
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation des données:', error);
+        // Use localStorage as final fallback
+        const savedHistory = localStorage.getItem('auditHistory');
+        const savedCurrentAudit = localStorage.getItem('currentMonthAudit');
+        
+        if (savedHistory) {
+          try {
+            const parsedHistory = JSON.parse(savedHistory);
+            setAuditHistory(parsedHistory);
+          } catch (e) {
+            console.warn('Échec du parsing de l\'historique sauvegardé');
+          }
+        }
+        
+        if (savedCurrentAudit) {
+          try {
+            const parsedCurrentAudit = JSON.parse(savedCurrentAudit);
+            setCurrentMonthAudit(parsedCurrentAudit);
+          } catch (e) {
+            console.warn('Échec du parsing de l\'audit courant sauvegardé');
           }
         }
       } finally {
@@ -179,14 +188,26 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Save to database whenever audit data changes
   useEffect(() => {
     if (!isLoading) {
-      // Save to localStorage as backup
+      // Always save to localStorage as backup
       localStorage.setItem('currentMonthAudit', JSON.stringify(currentMonthAudit));
       
-      // Save to Supabase if configured and has data
+      // Always try to save to Supabase if configured and has data
+      const saveToSupabase = async () => {
+        try {
+          const { isSupabaseConfigured } = await import('../lib/supabase');
+          if (isSupabaseConfigured && currentMonthAudit.locationAudits.length > 0) {
+            await AuditService.saveMonthlyAudit(currentMonthAudit);
+            console.log('Audit sauvegardé dans Supabase avec succès');
+          }
+        } catch (error) {
+          console.error('Erreur lors de la sauvegarde dans Supabase:', error);
+          console.log('Données sauvegardées localement uniquement');
+        }
+      };
+      
+      // Don't block the UI, save in background
       if (currentMonthAudit.locationAudits.length > 0) {
-        AuditService.saveMonthlyAudit(currentMonthAudit).catch(error => {
-          console.error('Error saving audit to database:', error);
-        });
+        saveToSupabase();
       }
     }
   }, [currentMonthAudit, isLoading]);
@@ -231,23 +252,51 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const resetAllAudits = () => {
     try {
+      console.log('Réinitialisation de tous les audits...');
+      
       // Clear localStorage
       localStorage.removeItem('auditHistory');
       localStorage.removeItem('currentMonthAudit');
+      
+      // Clear Supabase data if configured
+      const clearSupabaseData = async () => {
+        try {
+          const { isSupabaseConfigured, supabase } = await import('../lib/supabase');
+          if (isSupabaseConfigured && supabase) {
+            // Clear all audit data from Supabase
+            await supabase.from('corrective_actions').delete().neq('id', '');
+            await supabase.from('pillar_evaluations').delete().neq('id', '');
+            await supabase.from('location_audits').delete().neq('id', '');
+            await supabase.from('group_scores').delete().neq('id', '');
+            await supabase.from('monthly_audits').delete().neq('id', '');
+            console.log('Données Supabase supprimées avec succès');
+          }
+        } catch (error) {
+          console.error('Erreur lors de la suppression des données Supabase:', error);
+        }
+      };
+      
+      clearSupabaseData();
       
       // Reset state
       const newMonthlyAudit = createNewMonthlyAudit();
       setCurrentMonthAudit(newMonthlyAudit);
       setAuditHistory({ audits: [] });
       
-      // Force a page reload to ensure clean state
-      window.location.reload();
+      console.log('Réinitialisation terminée avec succès');
+      
+      // Small delay then reload to ensure cleanup is complete
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+      
     } catch (error) {
-      console.error('Error resetting audits:', error);
+      console.error('Erreur lors de la réinitialisation:', error);
       // Fallback: just reset state without localStorage
       const newMonthlyAudit = createNewMonthlyAudit();
       setCurrentMonthAudit(newMonthlyAudit);
       setAuditHistory({ audits: [] });
+      window.location.reload();
     }
   };
 
