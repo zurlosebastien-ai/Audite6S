@@ -251,53 +251,69 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const resetAllAudits = () => {
-    try {
-      console.log('Réinitialisation de tous les audits...');
-      
-      // Clear localStorage
-      localStorage.removeItem('auditHistory');
-      localStorage.removeItem('currentMonthAudit');
-      
-      // Clear Supabase data if configured
-      const clearSupabaseData = async () => {
+    const performReset = async () => {
+      try {
+        console.log('Réinitialisation de tous les audits...');
+        
+        // Clear localStorage first
+        localStorage.removeItem('auditHistory');
+        localStorage.removeItem('currentMonthAudit');
+        console.log('localStorage nettoyé');
+        
+        // Clear Supabase data if configured
         try {
           const { isSupabaseConfigured, supabase } = await import('../lib/supabase');
           if (isSupabaseConfigured && supabase) {
-            // Clear all audit data from Supabase
+            console.log('Nettoyage des données Supabase...');
+            
+            // Delete in correct order to respect foreign key constraints
             await supabase.from('corrective_actions').delete().neq('id', '');
             await supabase.from('pillar_evaluations').delete().neq('id', '');
             await supabase.from('location_audits').delete().neq('id', '');
             await supabase.from('group_scores').delete().neq('id', '');
             await supabase.from('monthly_audits').delete().neq('id', '');
+            
             console.log('Données Supabase supprimées avec succès');
+          } else {
+            console.log('Supabase non configuré, nettoyage local uniquement');
           }
-        } catch (error) {
-          console.error('Erreur lors de la suppression des données Supabase:', error);
+        } catch (supabaseError) {
+          console.error('Erreur lors de la suppression des données Supabase:', supabaseError);
+          console.log('Poursuite avec le nettoyage local');
         }
-      };
-      
-      clearSupabaseData();
-      
-      // Reset state
-      const newMonthlyAudit = createNewMonthlyAudit();
-      setCurrentMonthAudit(newMonthlyAudit);
-      setAuditHistory({ audits: [] });
-      
-      console.log('Réinitialisation terminée avec succès');
-      
-      // Small delay then reload to ensure cleanup is complete
-      setTimeout(() => {
+        
+        // Reset state immediately
+        const newMonthlyAudit = createNewMonthlyAudit();
+        setCurrentMonthAudit(newMonthlyAudit);
+        setAuditHistory({ audits: [] });
+        
+        console.log('État réinitialisé avec succès');
+        
+        // Force reload to ensure clean state
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+        
+      } catch (error) {
+        console.error('Erreur lors de la réinitialisation:', error);
+        
+        // Emergency fallback - force reset state and reload
+        try {
+          localStorage.clear();
+          const newMonthlyAudit = createNewMonthlyAudit();
+          setCurrentMonthAudit(newMonthlyAudit);
+          setAuditHistory({ audits: [] });
+        } catch (stateError) {
+          console.error('Erreur lors du reset d\'urgence:', stateError);
+        }
+        
+        // Always reload in case of error
         window.location.reload();
-      }, 500);
-      
-    } catch (error) {
-      console.error('Erreur lors de la réinitialisation:', error);
-      // Fallback: just reset state without localStorage
-      const newMonthlyAudit = createNewMonthlyAudit();
-      setCurrentMonthAudit(newMonthlyAudit);
-      setAuditHistory({ audits: [] });
-      window.location.reload();
-    }
+      }
+    };
+    
+    // Execute the reset
+    performReset();
   };
 
   const startLocationAudit = (locationId: string) => {

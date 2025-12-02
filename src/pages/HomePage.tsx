@@ -12,9 +12,6 @@ const HomePage: React.FC = () => {
   };
 
   const confirmReset = () => {
-    // Clear localStorage and reset state
-    localStorage.removeItem('auditHistory');
-    localStorage.removeItem('currentMonthAudit');
     resetAllAudits();
     setShowConfirmation(false);
   };
