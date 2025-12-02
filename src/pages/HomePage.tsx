@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Trash2, TrendingUp, Target, CheckCircle, AlertTriangle, BarChart3, Users } from 'lucide-react';
 import AuditStatus from '../components/dashboard/AuditStatus';
+import VisaKPIs from '../components/dashboard/VisaKPIs';
 import { useAudit } from '../context/AuditContext';
 
 const HomePage: React.FC = () => {
@@ -202,6 +203,9 @@ const HomePage: React.FC = () => {
       
       {/* Audit Status */}
       <AuditStatus />
+      
+      {/* Visa KPIs */}
+      <VisaKPIs />
     </div>
   );
 };

@@ -120,6 +120,7 @@ const AuditStatus: React.FC = () => {
                 const locationAudit = currentMonthAudit.locationAudits.find(
                   audit => audit.locationId === location.id && audit.completed
                 );
+                const visa = locationAudit?.auditorVisa;
                 
                 const isPending = pendingLocationIds.includes(location.id);
                 let statusIcon = isPending ? <Circle size={20} className="text-gray-400" /> : <CheckCircle size={20} className="text-green-500" />;
@@ -132,7 +133,14 @@ const AuditStatus: React.FC = () => {
                   <li key={location.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                     <div className="flex items-center">
                       {statusIcon}
-                      <span className="ml-3">{location.name}</span>
+                      <div className="ml-3">
+                        <span>{location.name}</span>
+                        {visa && (
+                          <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-mono rounded">
+                            {visa}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center">
                       {scoreDisplay}

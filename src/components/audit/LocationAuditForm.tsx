@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Save, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save, CheckCircle, User } from 'lucide-react';
 import { useAudit } from '../../context/AuditContext';
 import { PillarEvaluation } from '../../types';
 import PillarEvaluationForm from './PillarEvaluationForm';
@@ -21,6 +21,7 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
   } = useAudit();
   const navigate = useNavigate();
   const [currentPillarIndex, setCurrentPillarIndex] = useState(0);
+  const [auditorVisa, setAuditorVisa] = useState<string>('');
   
   if (isLoading) {
     return (
@@ -39,6 +40,8 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
   const locationAudit = getLocationAudit(locationId);
   if (!locationAudit) {
     startLocationAudit(locationId);
+  } else if (locationAudit.auditorVisa) {
+    setAuditorVisa(locationAudit.auditorVisa);
   }
   
   const currentPillar = pillars[currentPillarIndex];
@@ -68,7 +71,17 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
   };
   
   const handleCompleteAudit = () => {
-    completeLocationAudit(locationId);
+    if (!auditorVisa.trim()) {
+      alert('Veuillez saisir votre visa (3 lettres) avant de finaliser l\'audit.');
+      return;
+    }
+    
+    if (auditorVisa.length !== 3) {
+      alert('Le visa doit contenir exactement 3 lettres.');
+      return;
+    }
+    
+    completeLocationAudit(locationId, auditorVisa.toUpperCase());
     navigate('/');
   };
   
@@ -79,15 +92,35 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Audit : {location.name}</h1>
-        {canComplete && (
-          <button
-            onClick={handleCompleteAudit}
-            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-          >
-            <CheckCircle size={18} className="mr-2" />
-            Finaliser l'audit
-          </button>
-        )}
+        <div className="flex items-center gap-4">
+          {/* Visa input */}
+          <div className="flex items-center gap-2">
+            <User size={18} className="text-gray-500" />
+            <input
+              type="text"
+              value={auditorVisa}
+              onChange={(e) => setAuditorVisa(e.target.value.toUpperCase().slice(0, 3))}
+              placeholder="Visa (3 lettres)"
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-center font-mono"
+              maxLength={3}
+            />
+          </div>
+          
+          {canComplete && (
+            <button
+              onClick={handleCompleteAudit}
+              className={`flex items-center px-4 py-2 rounded-md transition-colors ${
+                auditorVisa.length === 3 
+                  ? 'bg-green-600 text-white hover:bg-green-700' 
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+              disabled={auditorVisa.length !== 3}
+            >
+              <CheckCircle size={18} className="mr-2" />
+              Finaliser l'audit
+            </button>
+          )}
+        </div>
       </div>
       
       {/* Pillar navigation */}

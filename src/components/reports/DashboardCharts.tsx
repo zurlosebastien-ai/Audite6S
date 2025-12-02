@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useAudit } from '../../context/AuditContext';
 import Chart from 'chart.js/auto';
 import { TrendingUp, Target, CheckCircle, Lightbulb, Clock, AlertTriangle, Award } from 'lucide-react';
+import VisaKPIs from '../dashboard/VisaKPIs';
 
 const DashboardCharts: React.FC = () => {
   const { currentMonthAudit, auditHistory, isLoading, locations, pillars, locationGroups } = useAudit();
@@ -561,6 +562,11 @@ const DashboardCharts: React.FC = () => {
           </div>
         </div>
       )}
+      
+      {/* Visa Statistics */}
+      <div className="mt-8">
+        <VisaKPIs />
+      </div>
     </div>
   );
 };

@@ -409,7 +409,7 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
-  const completeLocationAudit = (locationId: string) => {
+  const completeLocationAudit = (locationId: string, auditorVisa?: string) => {
     const locationAuditIndex = currentMonthAudit.locationAudits.findIndex(
       audit => audit.locationId === locationId
     );
@@ -424,6 +424,7 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ...locationAudit,
       completed: true,
       overallScore,
+      auditorVisa: auditorVisa || locationAudit.auditorVisa,
     };
 
     const updatedLocationAudits = [...currentMonthAudit.locationAudits];

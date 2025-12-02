@@ -60,6 +60,7 @@ export interface LocationAudit {
   overallScore?: number;
   year: number;
   groupId?: string;
+  auditorVisa?: string;
 }
 
 export interface GroupScore {
