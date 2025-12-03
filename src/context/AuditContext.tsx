@@ -251,57 +251,56 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const resetAllAudits = () => {
-    console.log('🔄 Début de la réinitialisation...');
+    console.log('🔄 Début de la réinitialisation complète...');
     
-    // 1. Clear localStorage immediately
+    // Force clear everything synchronously
     try {
-      localStorage.removeItem('auditHistory');
-      localStorage.removeItem('currentMonthAudit');
-      console.log('✅ localStorage nettoyé');
-    } catch (error) {
-      console.error('❌ Erreur localStorage:', error);
-    }
-    
-    // 2. Reset state immediately
-    const newMonthlyAudit = createNewMonthlyAudit();
-    setCurrentMonthAudit(newMonthlyAudit);
-    setAuditHistory({ audits: [] });
-    console.log('✅ État local réinitialisé');
-    
-    // 3. Clear Supabase in background (non-blocking)
-    const clearSupabase = async () => {
-      try {
-        const { isSupabaseConfigured, supabase } = await import('../lib/supabase');
-        if (isSupabaseConfigured && supabase) {
-          console.log('🗄️ Nettoyage Supabase...');
-          
-          // Delete in correct order
-          const { error: actionsError } = await supabase.from('corrective_actions').delete().neq('id', '');
-          if (actionsError) console.warn('Erreur suppression actions:', actionsError);
-          
-          const { error: evaluationsError } = await supabase.from('pillar_evaluations').delete().neq('id', '');
-          if (evaluationsError) console.warn('Erreur suppression evaluations:', evaluationsError);
-          
-          const { error: auditsError } = await supabase.from('location_audits').delete().neq('id', '');
-          if (auditsError) console.warn('Erreur suppression audits:', auditsError);
-          
-          const { error: scoresError } = await supabase.from('group_scores').delete().neq('id', '');
-          if (scoresError) console.warn('Erreur suppression scores:', scoresError);
-          
-          const { error: monthlyError } = await supabase.from('monthly_audits').delete().neq('id', '');
-          if (monthlyError) console.warn('Erreur suppression monthly:', monthlyError);
-          
-          console.log('✅ Supabase nettoyé');
+      // 1. Clear localStorage
+      localStorage.clear();
+      console.log('✅ localStorage vidé complètement');
+      
+      // 2. Reset state to initial values
+      const newMonthlyAudit = createNewMonthlyAudit();
+      setCurrentMonthAudit(newMonthlyAudit);
+      setAuditHistory({ audits: [] });
+      console.log('✅ État React réinitialisé');
+      
+      // 3. Clear Supabase synchronously
+      const clearSupabaseSync = async () => {
+        try {
+          const { isSupabaseConfigured, supabase } = await import('../lib/supabase');
+          if (isSupabaseConfigured && supabase) {
+            console.log('🗄️ Nettoyage Supabase synchrone...');
+            
+            // Delete all data in correct order (wait for each)
+            await supabase.from('corrective_actions').delete().gte('id', '');
+            await supabase.from('pillar_evaluations').delete().gte('id', '');
+            await supabase.from('location_audits').delete().gte('id', '');
+            await supabase.from('group_scores').delete().gte('id', '');
+            await supabase.from('monthly_audits').delete().gte('id', '');
+            
+            console.log('✅ Supabase nettoyé complètement');
+          }
+        } catch (error) {
+          console.warn('⚠️ Erreur Supabase:', error);
         }
-      } catch (error) {
-        console.warn('⚠️ Erreur Supabase (non bloquante):', error);
-      }
-    };
-    
-    // Execute Supabase cleanup in background
-    clearSupabase();
-    
-    console.log('✅ Réinitialisation terminée');
+      };
+      
+      // Execute Supabase cleanup and then reload
+      clearSupabaseSync().finally(() => {
+        console.log('🔄 Rechargement forcé de la page...');
+        setTimeout(() => {
+          window.location.href = window.location.origin;
+        }, 100);
+      });
+      
+    } catch (error) {
+      console.error('❌ Erreur lors de la réinitialisation:', error);
+      // Force reload anyway
+      setTimeout(() => {
+        window.location.href = window.location.origin;
+      }, 100);
+    }
   };
 
   const startLocationAudit = (locationId: string) => {

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Save, CheckCircle, User } from 'lucide-react';
 import { useAudit } from '../../context/AuditContext';
 import { PillarEvaluation } from '../../types';
 import PillarEvaluationForm from './PillarEvaluationForm';
+import ImprovementSuggestionsForm from './ImprovementSuggestionsForm';
 
 interface LocationAuditFormProps {
   locationId: string;
@@ -20,8 +21,10 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
     pillars
   } = useAudit();
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentPillarIndex, setCurrentPillarIndex] = useState(0);
   const [auditorVisa, setAuditorVisa] = useState<string>('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
   
   if (isLoading) {
     return (
@@ -81,12 +84,29 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
       return;
     }
     
+    // Show suggestions page before completing
+    setShowSuggestions(true);
+  };
+  
+  const handleFinishAudit = () => {
     completeLocationAudit(locationId, auditorVisa.toUpperCase());
     navigate('/');
   };
   
   // Check if all pillars have been evaluated (including people pillar)
   const canComplete = locationAudit?.evaluations.length === pillars.length;
+  
+  // Show suggestions form if requested
+  if (showSuggestions) {
+    return (
+      <ImprovementSuggestionsForm 
+        locationId={locationId}
+        locationName={location.name}
+        onFinish={handleFinishAudit}
+        onBack={() => setShowSuggestions(false)}
+      />
+    );
+  }
   
   return (
     <div>
@@ -117,7 +137,7 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
               disabled={auditorVisa.length !== 3}
             >
               <CheckCircle size={18} className="mr-2" />
-              Finaliser l'audit
+              Continuer
             </button>
           )}
         </div>
