@@ -16,12 +16,6 @@ const HomePage: React.FC = () => {
     console.log('🚀 Confirmation de réinitialisation');
     resetAllAudits();
     setShowConfirmation(false);
-    
-    // Force refresh after a short delay to ensure clean state
-    setTimeout(() => {
-      console.log('🔄 Rechargement de la page...');
-      window.location.reload();
-    }, 500);
   };
 
   // Calculate KPIs

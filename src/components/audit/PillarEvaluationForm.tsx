@@ -295,68 +295,6 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
           </>
         )}
         
-        {/* Improvement suggestions section for Shitsuke pillar */}
-        {pillar.id === 'shitsuke' && (
-          <div className="mb-6">
-            <h3 className="font-medium text-gray-700 mb-4 flex items-center">
-              <Lightbulb size={18} className="mr-2 text-blue-500" />
-              Suggestions d'amélioration continue :
-            </h3>
-            
-            <div className="flex gap-2 mb-4">
-              <input
-                type="text"
-                value={newSuggestion}
-                onChange={(e) => setNewSuggestion(e.target.value)}
-                placeholder="Nouvelle suggestion d'amélioration..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="button"
-                onClick={handleAddSuggestion}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center"
-              >
-                <Plus size={18} className="mr-1" />
-                Ajouter
-              </button>
-            </div>
-
-            {pendingSuggestions.length > 0 && (
-              <div className="mb-4">
-                <h4 className="text-sm font-medium text-gray-600 mb-2">Suggestions en cours :</h4>
-                <div className="space-y-2">
-                  {pendingSuggestions.map(suggestion => (
-                    <div key={suggestion.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-md">
-                      <span className="text-gray-700">{suggestion.description}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleImplementSuggestion(suggestion.id)}
-                        className="p-1 hover:bg-blue-100 rounded-full transition-colors"
-                      >
-                        <Check size={18} className="text-blue-600" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {implementedSuggestions.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium text-gray-600 mb-2">Suggestions implémentées :</h4>
-                <div className="space-y-2">
-                  {implementedSuggestions.map(suggestion => (
-                    <div key={suggestion.id} className="flex items-center justify-between p-3 bg-green-50 rounded-md">
-                      <span className="text-gray-700">{suggestion.description}</span>
-                      <Check size={18} className="text-green-600" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        
         <div className="flex justify-end">
           <button
             type="submit"
