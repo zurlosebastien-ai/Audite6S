@@ -251,69 +251,57 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const resetAllAudits = () => {
-    const performReset = async () => {
+    console.log('🔄 Début de la réinitialisation...');
+    
+    // 1. Clear localStorage immediately
+    try {
+      localStorage.removeItem('auditHistory');
+      localStorage.removeItem('currentMonthAudit');
+      console.log('✅ localStorage nettoyé');
+    } catch (error) {
+      console.error('❌ Erreur localStorage:', error);
+    }
+    
+    // 2. Reset state immediately
+    const newMonthlyAudit = createNewMonthlyAudit();
+    setCurrentMonthAudit(newMonthlyAudit);
+    setAuditHistory({ audits: [] });
+    console.log('✅ État local réinitialisé');
+    
+    // 3. Clear Supabase in background (non-blocking)
+    const clearSupabase = async () => {
       try {
-        console.log('Réinitialisation de tous les audits...');
-        
-        // Clear localStorage first
-        localStorage.removeItem('auditHistory');
-        localStorage.removeItem('currentMonthAudit');
-        console.log('localStorage nettoyé');
-        
-        // Clear Supabase data if configured
-        try {
-          const { isSupabaseConfigured, supabase } = await import('../lib/supabase');
-          if (isSupabaseConfigured && supabase) {
-            console.log('Nettoyage des données Supabase...');
-            
-            // Delete in correct order to respect foreign key constraints
-            await supabase.from('corrective_actions').delete().neq('id', '');
-            await supabase.from('pillar_evaluations').delete().neq('id', '');
-            await supabase.from('location_audits').delete().neq('id', '');
-            await supabase.from('group_scores').delete().neq('id', '');
-            await supabase.from('monthly_audits').delete().neq('id', '');
-            
-            console.log('Données Supabase supprimées avec succès');
-          } else {
-            console.log('Supabase non configuré, nettoyage local uniquement');
-          }
-        } catch (supabaseError) {
-          console.error('Erreur lors de la suppression des données Supabase:', supabaseError);
-          console.log('Poursuite avec le nettoyage local');
+        const { isSupabaseConfigured, supabase } = await import('../lib/supabase');
+        if (isSupabaseConfigured && supabase) {
+          console.log('🗄️ Nettoyage Supabase...');
+          
+          // Delete in correct order
+          const { error: actionsError } = await supabase.from('corrective_actions').delete().neq('id', '');
+          if (actionsError) console.warn('Erreur suppression actions:', actionsError);
+          
+          const { error: evaluationsError } = await supabase.from('pillar_evaluations').delete().neq('id', '');
+          if (evaluationsError) console.warn('Erreur suppression evaluations:', evaluationsError);
+          
+          const { error: auditsError } = await supabase.from('location_audits').delete().neq('id', '');
+          if (auditsError) console.warn('Erreur suppression audits:', auditsError);
+          
+          const { error: scoresError } = await supabase.from('group_scores').delete().neq('id', '');
+          if (scoresError) console.warn('Erreur suppression scores:', scoresError);
+          
+          const { error: monthlyError } = await supabase.from('monthly_audits').delete().neq('id', '');
+          if (monthlyError) console.warn('Erreur suppression monthly:', monthlyError);
+          
+          console.log('✅ Supabase nettoyé');
         }
-        
-        // Reset state immediately
-        const newMonthlyAudit = createNewMonthlyAudit();
-        setCurrentMonthAudit(newMonthlyAudit);
-        setAuditHistory({ audits: [] });
-        
-        console.log('État réinitialisé avec succès');
-        
-        // Force reload to ensure clean state
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
-        
       } catch (error) {
-        console.error('Erreur lors de la réinitialisation:', error);
-        
-        // Emergency fallback - force reset state and reload
-        try {
-          localStorage.clear();
-          const newMonthlyAudit = createNewMonthlyAudit();
-          setCurrentMonthAudit(newMonthlyAudit);
-          setAuditHistory({ audits: [] });
-        } catch (stateError) {
-          console.error('Erreur lors du reset d\'urgence:', stateError);
-        }
-        
-        // Always reload in case of error
-        window.location.reload();
+        console.warn('⚠️ Erreur Supabase (non bloquante):', error);
       }
     };
     
-    // Execute the reset
-    performReset();
+    // Execute Supabase cleanup in background
+    clearSupabase();
+    
+    console.log('✅ Réinitialisation terminée');
   };
 
   const startLocationAudit = (locationId: string) => {
