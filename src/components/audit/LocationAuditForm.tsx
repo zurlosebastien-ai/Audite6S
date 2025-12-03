@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Save, CheckCircle, User } from 'lucide-react';
 import { useAudit } from '../../context/AuditContext';
 import { PillarEvaluation } from '../../types';
@@ -21,7 +21,6 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
     pillars
   } = useAudit();
   const navigate = useNavigate();
-  const location = useLocation();
   const [currentPillarIndex, setCurrentPillarIndex] = useState(0);
   const [auditorVisa, setAuditorVisa] = useState<string>('');
   const [showSuggestions, setShowSuggestions] = useState(false);
