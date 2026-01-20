@@ -14,7 +14,6 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
   onSave,
 }) => {
   const [score, setScore] = useState<number>(0);
-  const [comment, setComment] = useState<string>('');
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, boolean>>(
     initialEvaluation?.questionAnswers || {}
   );
@@ -26,11 +25,9 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
   );
   const [newAction, setNewAction] = useState<string>('');
   const [newSuggestion, setNewSuggestion] = useState<string>('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setScore(0);
-    setComment('');
     setQuestionAnswers(initialEvaluation?.questionAnswers || {});
     setCorrectiveActions(initialEvaluation?.correctiveActions || []);
     setImprovementSuggestions(initialEvaluation?.improvementSuggestions || []);
@@ -46,28 +43,12 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const newErrors: Record<string, string> = {};
-    let hasErrors = false;
-    
-    Object.entries(questionAnswers).forEach(([questionId, value]) => {
-      if (value === false && !comment.trim()) {
-        newErrors[questionId] = 'Un commentaire est requis pour les réponses négatives';
-        hasErrors = true;
-      }
-    });
-
-    if (hasErrors) {
-      setErrors(newErrors);
-      return;
-    }
 
     const finalScore = calculateScore(questionAnswers);
 
     onSave({
       pillarId: pillar.id,
       score: finalScore,
-      comment,
       questionAnswers,
       correctiveActions,
       improvementSuggestions
@@ -81,14 +62,6 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
     };
     setQuestionAnswers(newAnswers);
     setScore(calculateScore(newAnswers));
-    
-    if (value) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[questionId];
-        return newErrors;
-      });
-    }
   };
 
   const handleAddAction = () => {
@@ -168,9 +141,6 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
                 <div className="flex items-start gap-4">
                   <div className="flex-grow">
                     <p className="text-gray-700">{question.text}</p>
-                    {errors[question.id] && (
-                      <p className="text-red-600 text-sm mt-1">{errors[question.id]}</p>
-                    )}
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -215,29 +185,7 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
           </div>
         </div>
         
-        {!allQuestionsPositive && (
-          <>
-            <div className="mb-6">
-              <label className="block text-gray-700 mb-2">
-                Commentaires et observations :
-              </label>
-              <textarea
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  Object.keys(errors).length > 0 ? 'border-red-500' : 'border-gray-300'
-                }`}
-                rows={4}
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Entrez vos observations, points forts et axes d'amélioration..."
-              ></textarea>
-              {Object.keys(errors).length > 0 && (
-                <p className="text-red-600 text-sm mt-1">
-                  Un commentaire est requis pour les réponses négatives
-                </p>
-              )}
-            </div>
-
-            <div className="mb-6">
+        <div className="mb-6">
               <h3 className="font-medium text-gray-700 mb-4">Actions correctives :</h3>
               
               <div className="flex gap-2 mb-4">
@@ -292,9 +240,7 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
                 </div>
               )}
             </div>
-          </>
-        )}
-        
+
         <div className="flex justify-end">
           <button
             type="submit"

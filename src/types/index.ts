@@ -46,7 +46,7 @@ export interface ImprovementSuggestion {
 export interface PillarEvaluation {
   pillarId: PillarKey;
   score: number;
-  comment: string;
+  comment?: string;
   questionAnswers?: Record<string, boolean>;
   correctiveActions: CorrectiveAction[];
   improvementSuggestions: ImprovementSuggestion[];
