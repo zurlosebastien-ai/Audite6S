@@ -20,8 +20,16 @@ const VisaKPIs: React.FC = () => {
     );
   }
 
-  // Get all audits (current + history)
-  const allAudits = [...auditHistory.audits, currentMonthAudit];
+  // Get all audits (current + history) without duplicates
+  const allAuditsMap = new Map<string, typeof currentMonthAudit>();
+
+  auditHistory.audits.forEach(audit => {
+    allAuditsMap.set(audit.month, audit);
+  });
+
+  allAuditsMap.set(currentMonthAudit.month, currentMonthAudit);
+
+  const allAudits = Array.from(allAuditsMap.values());
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
 

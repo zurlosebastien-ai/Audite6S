@@ -26,8 +26,17 @@ const HistoricalReport: React.FC = () => {
     return new Date(parseInt(year), parseInt(month) - 1)
       .toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
   };
-  
-  const allAudits = [...auditHistory.audits, currentMonthAudit];
+
+  // Deduplicate audits by month
+  const allAuditsMap = new Map<string, typeof currentMonthAudit>();
+
+  auditHistory.audits.forEach(audit => {
+    allAuditsMap.set(audit.month, audit);
+  });
+
+  allAuditsMap.set(currentMonthAudit.month, currentMonthAudit);
+
+  const allAudits = Array.from(allAuditsMap.values());
   const completedAudits = allAudits
     .filter(audit => audit.completed)
     .sort((a, b) => a.month.localeCompare(b.month))

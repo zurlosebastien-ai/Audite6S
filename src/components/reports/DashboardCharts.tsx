@@ -26,8 +26,16 @@ const DashboardCharts: React.FC = () => {
     );
   }
 
-  // Calculate statistics
-  const allAudits = [...auditHistory.audits, currentMonthAudit];
+  // Calculate statistics - deduplicate audits by month
+  const allAuditsMap = new Map<string, typeof currentMonthAudit>();
+
+  auditHistory.audits.forEach(audit => {
+    allAuditsMap.set(audit.month, audit);
+  });
+
+  allAuditsMap.set(currentMonthAudit.month, currentMonthAudit);
+
+  const allAudits = Array.from(allAuditsMap.values());
   const recentAudits = allAudits
     .filter(audit => audit.completed || audit.locationAudits.some(la => la.completed))
     .sort((a, b) => a.month.localeCompare(b.month))
