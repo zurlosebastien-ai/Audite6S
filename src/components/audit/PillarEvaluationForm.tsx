@@ -23,7 +23,8 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
   const [improvementSuggestions, setImprovementSuggestions] = useState<ImprovementSuggestion[]>(
     initialEvaluation?.improvementSuggestions || []
   );
-  const [newAction, setNewAction] = useState<string>('');
+  const [newActionTitle, setNewActionTitle] = useState<string>('');
+  const [newActionComment, setNewActionComment] = useState<string>('');
   const [newSuggestion, setNewSuggestion] = useState<string>('');
 
   useEffect(() => {
@@ -65,11 +66,12 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
   };
 
   const handleAddAction = () => {
-    if (!newAction.trim()) return;
+    if (!newActionTitle.trim() || !newActionComment.trim()) return;
 
     const action: CorrectiveAction = {
       id: crypto.randomUUID(),
-      description: newAction.trim(),
+      title: newActionTitle.trim(),
+      description: newActionComment.trim(),
       locationId: '', // Will be set by the parent component
       pillarId: pillar.id,
       createdAt: new Date().toISOString(),
@@ -77,7 +79,8 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
     };
 
     setCorrectiveActions([...correctiveActions, action]);
-    setNewAction('');
+    setNewActionTitle('');
+    setNewActionComment('');
   };
 
   const handleAddSuggestion = () => {
@@ -187,22 +190,29 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
         
         <div className="mb-6">
               <h3 className="font-medium text-gray-700 mb-4">Actions correctives :</h3>
-              
-              <div className="flex gap-2 mb-4">
+
+              <div className="space-y-3 mb-4">
                 <input
                   type="text"
-                  value={newAction}
-                  onChange={(e) => setNewAction(e.target.value)}
-                  placeholder="Nouvelle action corrective..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={newActionTitle}
+                  onChange={(e) => setNewActionTitle(e.target.value)}
+                  placeholder="Titre de l'action..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <textarea
+                  value={newActionComment}
+                  onChange={(e) => setNewActionComment(e.target.value)}
+                  placeholder="Description détaillée..."
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
                   type="button"
                   onClick={handleAddAction}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center"
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
                 >
                   <Plus size={18} className="mr-1" />
-                  Ajouter
+                  Ajouter l'action
                 </button>
               </div>
 
@@ -211,15 +221,20 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
                   <h4 className="text-sm font-medium text-gray-600 mb-2">Actions en cours :</h4>
                   <div className="space-y-2">
                     {pendingActions.map(action => (
-                      <div key={action.id} className="flex items-center justify-between p-3 bg-yellow-50 rounded-md">
-                        <span className="text-gray-700">{action.description}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleCompleteAction(action.id)}
-                          className="p-1 hover:bg-yellow-100 rounded-full transition-colors"
-                        >
-                          <Check size={18} className="text-yellow-600" />
-                        </button>
+                      <div key={action.id} className="p-3 bg-yellow-50 rounded-md">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-grow">
+                            <p className="font-medium text-gray-800">{action.title}</p>
+                            <p className="text-sm text-gray-600 mt-1">{action.description}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCompleteAction(action.id)}
+                            className="p-1 hover:bg-yellow-100 rounded-full transition-colors ml-2"
+                          >
+                            <Check size={18} className="text-yellow-600" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -231,9 +246,14 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
                   <h4 className="text-sm font-medium text-gray-600 mb-2">Actions effectuées :</h4>
                   <div className="space-y-2">
                     {completedActions.map(action => (
-                      <div key={action.id} className="flex items-center justify-between p-3 bg-green-50 rounded-md">
-                        <span className="text-gray-700">{action.description}</span>
-                        <Check size={18} className="text-green-600" />
+                      <div key={action.id} className="p-3 bg-green-50 rounded-md">
+                        <div className="flex items-start gap-3">
+                          <Check size={18} className="text-green-600 mt-0.5 flex-shrink-0" />
+                          <div className="flex-grow">
+                            <p className="font-medium text-gray-800">{action.title}</p>
+                            <p className="text-sm text-gray-600 mt-1">{action.description}</p>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>

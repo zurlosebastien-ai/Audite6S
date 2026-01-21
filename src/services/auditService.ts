@@ -65,7 +65,8 @@ export class AuditService {
 
                   const correctiveActions: CorrectiveAction[] = (actions || []).map(action => ({
                     id: action.id,
-                    description: action.description,
+                    title: action.title || action.description || '',
+                    description: action.description || '',
                     locationId: locationAudit.location_id,
                     pillarId: evaluation.pillar_id,
                     createdAt: action.created_at || new Date().toISOString(),
@@ -214,6 +215,7 @@ export class AuditService {
               .upsert({
                 id: action.id,
                 pillar_evaluation_id: evaluationId,
+                title: action.title,
                 description: action.description,
                 status: action.status,
                 completed_at: action.completedAt || null

@@ -25,6 +25,7 @@ export interface Location {
 
 export interface CorrectiveAction {
   id: string;
+  title: string;
   description: string;
   locationId: string;
   pillarId: PillarKey;

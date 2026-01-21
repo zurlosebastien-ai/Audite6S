@@ -171,15 +171,16 @@ const CorrectiveActionsPage: React.FC = () => {
                 key={action.id}
                 className={`border rounded-lg p-4 ${getActionCardStyle(action.deadlineStatus)}`}
               >
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start gap-4">
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{action.description}</p>
-                    <div className="mt-2 text-sm text-gray-600">
+                    <p className="font-bold text-gray-900">{action.title}</p>
+                    <p className="text-gray-700 mt-1">{action.description}</p>
+                    <div className="mt-3 text-sm text-gray-600">
                       <p>Local : {action.locationName}</p>
                       <p>Pilier : {action.pillarName}</p>
                       <p>Créée le : {new Date(action.createdAt).toLocaleDateString('fr-FR')}</p>
                       {action.deadlineStatus && (
-                        <div className="flex items-center gap-1 mt-1">
+                        <div className="flex items-center gap-1 mt-2">
                           {getDeadlineIcon(action.deadlineStatus)}
                           <span className={`font-medium ${getDeadlineTextColor(action.deadlineStatus)}`}>
                             {getDeadlineText(action.deadlineStatus)}
@@ -190,7 +191,7 @@ const CorrectiveActionsPage: React.FC = () => {
                   </div>
                   <button
                     onClick={() => completeCorrectiveAction(action.id, action.locationId, action.pillarId)}
-                    className="p-2 hover:bg-white hover:bg-opacity-50 rounded-full transition-colors"
+                    className="p-2 hover:bg-white hover:bg-opacity-50 rounded-full transition-colors flex-shrink-0"
                   >
                     <Check size={20} className="text-green-600" />
                   </button>
@@ -213,10 +214,11 @@ const CorrectiveActionsPage: React.FC = () => {
                 key={action.id}
                 className="border border-green-200 bg-green-50 rounded-lg p-4"
               >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium text-gray-900">{action.description}</p>
-                    <div className="mt-2 text-sm text-gray-600">
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1">
+                    <p className="font-bold text-gray-900">{action.title}</p>
+                    <p className="text-gray-700 mt-1">{action.description}</p>
+                    <div className="mt-3 text-sm text-gray-600">
                       <p>Local : {action.locationName}</p>
                       <p>Pilier : {action.pillarName}</p>
                       <p>Créée le : {new Date(action.createdAt).toLocaleDateString('fr-FR')}</p>
@@ -225,7 +227,7 @@ const CorrectiveActionsPage: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  <Check size={20} className="text-green-600" />
+                  <Check size={20} className="text-green-600 flex-shrink-0" />
                 </div>
               </div>
             ))}
