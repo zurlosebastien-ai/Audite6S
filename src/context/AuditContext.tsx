@@ -190,32 +190,48 @@ export const AuditProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!isLoading) {
       // Always save to localStorage as backup
       localStorage.setItem('currentMonthAudit', JSON.stringify(currentMonthAudit));
-      
-      // Always try to save to Supabase if configured and has data
+
+      // Always try to save to Supabase if configured
       const saveToSupabase = async () => {
         try {
           const { isSupabaseConfigured } = await import('../lib/supabase');
-          if (isSupabaseConfigured && currentMonthAudit.locationAudits.length > 0) {
+          if (isSupabaseConfigured) {
             await AuditService.saveMonthlyAudit(currentMonthAudit);
             console.log('Audit sauvegardé dans Supabase avec succès');
           }
         } catch (error) {
           console.error('Erreur lors de la sauvegarde dans Supabase:', error);
-          console.log('Données sauvegardées localement uniquement');
         }
       };
-      
-      // Don't block the UI, save in background
-      if (currentMonthAudit.locationAudits.length > 0) {
-        saveToSupabase();
-      }
+
+      // Save to Supabase in background - always attempt to save
+      saveToSupabase();
     }
   }, [currentMonthAudit, isLoading]);
 
-  // Save audit history to localStorage
+  // Save audit history to localStorage and Supabase
   useEffect(() => {
     if (!isLoading) {
       localStorage.setItem('auditHistory', JSON.stringify(auditHistory));
+
+      // Save all audits to Supabase in background
+      const saveHistoryToSupabase = async () => {
+        try {
+          const { isSupabaseConfigured } = await import('../lib/supabase');
+          if (isSupabaseConfigured) {
+            for (const audit of auditHistory.audits) {
+              await AuditService.saveMonthlyAudit(audit);
+            }
+            console.log('Historique sauvegardé dans Supabase avec succès');
+          }
+        } catch (error) {
+          console.error('Erreur lors de la sauvegarde de l\'historique dans Supabase:', error);
+        }
+      };
+
+      if (auditHistory.audits.length > 0) {
+        saveHistoryToSupabase();
+      }
     }
   }, [auditHistory, isLoading]);
 

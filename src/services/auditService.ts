@@ -228,8 +228,12 @@ export class AuditService {
         }
       }
     } catch (error) {
-      console.error('Error saving audit:', error)
-      throw error
+      console.error('Erreur lors de la sauvegarde de l\'audit:', error)
+      console.error('Détails:', {
+        month: audit.month,
+        year: audit.year,
+        locationAudits: audit.locationAudits.length
+      })
     }
   }
 

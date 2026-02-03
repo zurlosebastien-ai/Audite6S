@@ -182,6 +182,7 @@ export interface Database {
         Row: {
           id: string
           pillar_evaluation_id: string
+          title: string | null
           description: string
           status: string | null
           completed_at: string | null
@@ -190,6 +191,7 @@ export interface Database {
         Insert: {
           id?: string
           pillar_evaluation_id: string
+          title?: string | null
           description: string
           status?: string | null
           completed_at?: string | null
@@ -198,6 +200,7 @@ export interface Database {
         Update: {
           id?: string
           pillar_evaluation_id?: string
+          title?: string | null
           description?: string
           status?: string | null
           completed_at?: string | null
