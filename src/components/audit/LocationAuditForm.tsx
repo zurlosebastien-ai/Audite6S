@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Save, CheckCircle, User } from 'lucide-react';
 import { useAudit } from '../../context/AuditContext';
@@ -24,6 +24,7 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
   const [currentPillarIndex, setCurrentPillarIndex] = useState(0);
   const [auditorVisa, setAuditorVisa] = useState<string>('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [formSaved, setFormSaved] = useState(false);
   
   if (isLoading) {
     return (
@@ -50,10 +51,14 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
   const initialEvaluation = locationAudit?.evaluations.find(
     evaluationItem => evaluationItem.pillarId === currentPillar.id
   );
+
+  useEffect(() => {
+    setFormSaved(!!initialEvaluation);
+  }, [currentPillarIndex, initialEvaluation]);
   
   const handleSaveEvaluation = (evaluation: PillarEvaluation) => {
     updateEvaluation(locationId, evaluation);
-    
+
     // Move to next pillar if not the last one
     if (currentPillarIndex < pillars.length - 1) {
       setCurrentPillarIndex(currentPillarIndex + 1);
@@ -150,16 +155,25 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
             const isCompleted = locationAudit?.evaluations.some(
               evaluationItem => evaluationItem.pillarId === pillar.id
             );
-            
+            const canNavigate = formSaved || isCompleted || isActive;
+
             return (
               <button
                 key={pillar.id}
-                onClick={() => setCurrentPillarIndex(index)}
+                onClick={() => {
+                  if (canNavigate) {
+                    setCurrentPillarIndex(index);
+                    setFormSaved(false);
+                  }
+                }}
+                disabled={!canNavigate && !isActive}
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors
                   ${isActive ? 'bg-blue-600 text-white' : ''}
-                  ${!isActive && isCompleted ? 'bg-green-100 text-green-800' : ''}
-                  ${!isActive && !isCompleted ? 'bg-gray-200 text-gray-600' : ''}
+                  ${!isActive && isCompleted ? 'bg-green-100 text-green-800 cursor-pointer hover:bg-green-200' : ''}
+                  ${!isActive && !isCompleted && (!canNavigate) ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : ''}
+                  ${!isActive && !isCompleted && canNavigate ? 'bg-gray-300 text-gray-700 cursor-pointer hover:bg-gray-400' : ''}
                 `}
+                title={!canNavigate && !isActive ? 'Enregistrez le formulaire actuel pour continuer' : ''}
               >
                 {index + 1}
               </button>
