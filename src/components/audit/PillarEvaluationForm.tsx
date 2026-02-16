@@ -119,8 +119,10 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
     );
   };
 
-  const allQuestionsPositive = Object.values(questionAnswers).length === pillar.questions.length && 
+  const allQuestionsPositive = Object.values(questionAnswers).length === pillar.questions.length &&
     Object.values(questionAnswers).every(answer => answer === true);
+
+  const hasNonCompliantAnswers = Object.values(questionAnswers).some(answer => answer === false);
 
   const completionPercentage = (score / 10) * 100;
 
@@ -261,14 +263,16 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
               )}
             </div>
 
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Enregistrer
-          </button>
-        </div>
+        {!hasNonCompliantAnswers && (
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Enregistrer
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );

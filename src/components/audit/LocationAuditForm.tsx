@@ -175,34 +175,6 @@ const LocationAuditForm: React.FC<LocationAuditFormProps> = ({ locationId }) => 
         onSave={handleSaveEvaluation}
       />
       
-      {/* Navigation buttons */}
-      <div className="flex justify-between">
-        <button
-          onClick={handlePrevPillar}
-          className={`flex items-center px-4 py-2 rounded-md transition-colors
-            ${currentPillarIndex > 0 
-              ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' 
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`
-          }
-          disabled={currentPillarIndex === 0}
-        >
-          <ChevronLeft size={18} className="mr-1" />
-          Précédent
-        </button>
-        
-        <button
-          onClick={handleNextPillar}
-          className={`flex items-center px-4 py-2 rounded-md transition-colors
-            ${currentPillarIndex < pillars.length - 1 
-              ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' 
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`
-          }
-          disabled={currentPillarIndex === pillars.length - 1}
-        >
-          Suivant
-          <ChevronRight size={18} className="ml-1" />
-        </button>
-      </div>
     </div>
   );
 };
