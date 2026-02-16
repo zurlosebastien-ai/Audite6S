@@ -263,7 +263,7 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
               )}
             </div>
 
-        {!hasNonCompliantAnswers && (
+        {(!hasNonCompliantAnswers || pendingActions.length > 0) && (
           <div className="flex justify-end">
             <button
               type="submit"
@@ -271,6 +271,17 @@ const PillarEvaluationForm: React.FC<PillarEvaluationFormProps> = ({
             >
               Enregistrer
             </button>
+          </div>
+        )}
+
+        {hasNonCompliantAnswers && pendingActions.length === 0 && (
+          <div className="flex justify-end">
+            <div className="px-4 py-3 bg-orange-50 border border-orange-200 rounded-md flex items-center gap-2">
+              <div className="text-orange-700 text-sm">
+                <p className="font-medium">Action corrective obligatoire</p>
+                <p className="text-xs mt-1">Veuillez ajouter au moins une action corrective pour les points non conformes.</p>
+              </div>
+            </div>
           </div>
         )}
       </form>
