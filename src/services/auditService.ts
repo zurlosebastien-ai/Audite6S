@@ -142,7 +142,7 @@ export class AuditService {
           completed: audit.completed,
           overall_score: audit.overallScore || null
         }, {
-          onConflict: 'month'
+          onConflict: 'month,year'
         })
         .select()
         .single()
